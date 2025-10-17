@@ -1,0 +1,91 @@
+# ================================================================= #
+#                  Configurazione CalendarioPlugin                  #
+# ================================================================= #
+# Questo file di configurazione ti permette di personalizzare ogni #
+# aspetto del plugin Calendario, dal tempo agli effetti visivi.     #
+# ----------------------------------------------------------------- #
+debug-mode: false
+# Impostazioni del Tempo
+# Controlla la durata del ciclo giorno/notte in secondi reali per ogni stagione.
+# Un giorno di Minecraft standard dura 1200 secondi (600 giorno, 600 notte).
+time-cycle:
+  primavera:
+    day-duration-seconds: 600  # 10 minuti
+    night-duration-seconds: 600 # 10 minuti
+  estate:
+    day-duration-seconds: 900  # 15 minuti
+    night-duration-seconds: 300 # 5 minuti
+  autunno:
+    day-duration-seconds: 600  # 10 minuti
+    night-duration-seconds: 600 # 10 minuti
+  inverno:
+    day-duration-seconds: 420  # 7 minuti
+    night-duration-seconds: 780 # 13 minuti
+
+# Resource Pack Stagionali (Compatibile Vanilla)
+# Inserisci i link di download diretto e gli hash SHA-1 per ogni resource pack.
+# Se non vuoi inviare una pack per una certa stagione, lascia l'URL vuoto ("").
+resource-packs:
+  primavera:
+    url: ""
+    sha1: ""
+  estate:
+    url: ""
+    sha1: ""
+  autunno:
+    url: ""
+    sha1: ""
+  inverno:
+    url: ""
+    sha1: ""
+
+sleep-mechanics:
+  # Percentuale di giocatori (da 0 a 100) che devono dormire per saltare la notte.
+  # Impostando 100, tutti devono dormire. Impostando 50, basta la metà.
+  # Se questa opzione non è presente, il valore di default sarà 100.
+  players-sleeping-percentage: 100
+
+# Impostazioni Effetti Visivi
+visual-effects:
+  inverno:
+    # Probabilità (0-100) che avvenga un tentativo di piazzare neve/ghiaccio.
+    # Più alto = congelamento più rapido.
+    freeze-chance: 50
+  primavera:
+    # Probabilità che avvenga un tentativo di sciogliere neve/ghiaccio.
+    thaw-chance: 35
+    # Probabilità (0-100) di far sbocciare un fiore sull'erba liberata dalla neve.
+    flower-spawn-chance: 5
+
+# Impostazioni Agricoltura Stagionale
+seasonal-farming:
+  # Probabilità (da 0.0 a 1.0) che una pianta fuori stagione possa crescere.
+  # 0.25 = 25% di possibilità. 0.0 = crescita completamente bloccata.
+  out-of-season-growth-chance: 0.25
+
+
+# Impostazioni Boss Bar
+bossbar:
+  # --- NUOVA OPZIONE ---
+  # Imposta su 'false' per disabilitare completamente la Boss Bar per tutti.
+  enabled: true
+  # --- NUOVA OPZIONE ---
+  # Imposta su 'false' per nascondere la barra di progressione colorata
+  # e mostrare solo il testo.
+  show-progress-bar: false
+  # ---------------------
+  # Formato del titolo. Segnaposto: {data}, {stagione}, {meteo}, {ora}
+  format: "&a{data} &8| {stagione} &8| {meteo} &8| &e{ora}"
+  # Colore della barra: BLUE, GREEN, PINK, PURPLE, RED, WHITE, YELLOW
+  bar-color: "BLUE"
+  # Stile della barra: SOLID, SEGMENTED_6, SEGMENTED_10, SEGMENTED_12, SEGMENTED_20
+  bar-style: "SOLID"
+
+# ================================================================= #
+#      DATI INTERNI DEL CALENDARIO - NON MODIFICARE A MANO          #
+# ================================================================= #
+calendario:
+  anno: 1
+  mese: 1
+  giorno: 1
+  total-ticks-salvati: 0

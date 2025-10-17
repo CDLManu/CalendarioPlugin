@@ -1,0 +1,143 @@
+# ================================================================= #
+#                      Eventi del Calendario                        #
+# ================================================================= #
+# Questo file definisce tutti gli eventi personalizzati del server.
+# Ogni evento ha un ID unico (es. 'Notte_dei_morti').
+#
+# Tipi di Evento:
+#   ANNUAL: Si attiva ogni anno in una data specifica (es. 25/12).
+#   FIXED_DATE: Si attiva una sola volta in una data completa (es. 01/01/0001).
+#   RANDOM: Ha una probabilità ('chance') di attivarsi ogni giorno, se le condizioni sono soddisfatte.
+#
+# Comandi:
+#   - Usa 'tellraw @a' per messaggi formattati. Generatore utile: https://www.minecraftjson.com/
+#   - Racchiudi i comandi tellraw tra apici singoli (' ') per evitare errori con le virgolette.
+#   - Puoi usare qualsiasi comando eseguibile dalla console.
+# ================================================================= #
+
+events:
+  # ========================== #
+  #       EVENTI ANNUALI       #
+  # ========================== #
+  capodanno:
+    display-name: "&b&lCapodanno"
+    type: ANNUAL
+    trigger-date: "01/01" # 1 Gennaio
+    duration-days: 1
+    start-commands:
+      - 'tellraw @a [{"text":"Buon Anno Nuovo!","color":"gold","bold":true},{"text":" Che questo sia un anno di nuove avventure!","color":"yellow"}]'
+      - 'give @a firework_rocket{Fireworks:{Flight:1,Explosions:[{Type:4,Colors:[I;16777215,16711680,255]}]}} 16'
+    end-commands:
+      - 'tellraw @a {"text":"I festeggiamenti di Capodanno sono terminati!","color":"aqua"}'
+
+  pasqua:
+    display-name: "&e&lCaccia alle Uova"
+    type: ANNUAL
+    trigger-date: "10/04" # 10 Aprile (data di esempio per Pasqua)
+    duration-days: 2
+    start-commands:
+      - 'tellraw @a [{"text":"È iniziata la ","color":"yellow"},{"text":"Caccia alle Uova di Pasqua!","color":"light_purple","bold":true},{"text":" Si dice che i mostri lascino cadere delle sorprese...","color":"yellow"}]'
+      # Qui potresti aggiungere comandi per attivare una loot table personalizzata per i mostri, se hai un plugin apposito.
+    end-commands:
+      - 'tellraw @a {"text":"La Caccia alle Uova è finita! Speriamo abbiate trovato tante sorprese!","color":"yellow"}'
+
+  ferragosto:
+    display-name: "&6&lFesta d'Estate"
+    type: ANNUAL
+    trigger-date: "15/08" # 15 Agosto
+    duration-days: 3
+    start-commands:
+      - 'tellraw @a [{"text":"È Ferragosto!","color":"gold","bold":true},{"text":" Godetevi il sole, il mare e un bonus sulla pesca!","color":"aqua"}]'
+      - 'effect give @a luck 259200 1 true' # Dà Fortuna per 3 giorni di gioco (3 * 24h * 3600s)
+    end-commands:
+      - 'tellraw @a {"text":"La festa d''estate è finita!","color":"gold"}'
+      - 'effect clear @a luck'
+
+  halloween:
+    display-name: "&6&lNotte dei Morti"
+    type: ANNUAL
+    trigger-date: "31/10" # 31 Ottobre
+    duration-days: 1
+    start-commands:
+      - 'tellraw @a [{"text":"Dolcetto o scherzetto?","color":"gold","bold":true},{"text":" Stanotte, i mostri sono più spaventosi del solito...","color":"dark_purple"}]'
+      - 'gamerule doInsomnia false' # Impedisce ai Phantoms di spawnare per non sovrapporsi
+    end-commands:
+      - 'tellraw @a {"text":"La Notte dei Morti è finita. Gli spiriti sono tornati a riposare.","color":"light_purple"}'
+      - 'gamerule doInsomnia true'
+
+  natale:
+    display-name: "&c&lSpirito Natalizio"
+    type: ANNUAL
+    trigger-date: "25/12" # 25 Dicembre
+    duration-days: 5
+    start-commands:
+      - 'tellraw @a [{"text":"Buon Natale!","color":"red","bold":true},{"text":" Lo spirito natalizio pervade l''aria!","color":"white"}]'
+      - 'give @p written_book[written_book_content={title:"Auguri Di Natale",author:"Babbo Natale",generation:0,pages:[{"text":"Tanti auguri di un sereno e felice Natale da tutto lo staff!","color":"green"}]}] 1'
+    end-commands:
+      - 'tellraw @a {"text":"Le festività natalizie sono concluse!","color":"green"}'
+
+  # ======================== #
+  #       EVENTI RANDOM      #
+  # ======================== #
+  pioggia_di_stelle:
+    display-name: "&d&lPioggia di Stelle"
+    type: RANDOM
+    conditions:
+      chance: 3 # Bassa probabilità
+      seasons: # Può accadere solo in queste stagioni
+        - ESTATE
+        - PRIMAVERA
+    duration-days: 1
+    start-commands:
+      - 'tellraw @a [{"text":"Stanotte il cielo sarà illuminato da una ","color":"aqua"},{"text":"Pioggia di Stelle Cadenti!","color":"light_purple","bold":true},{"text":" Esprimete un desiderio!","color":"aqua"}]'
+      - 'effect give @a night_vision 24000 0 true' # Visione notturna per 1 giorno di gioco per ammirare il cielo
+    end-commands:
+      - 'tellraw @a {"text":"La pioggia di stelle è terminata.","color":"aqua"}'
+
+  mercante_errante:
+    display-name: "&aMercante Misterioso"
+    type: RANDOM
+    conditions:
+      chance: 10 # Probabilità media
+    duration-days: 2
+    start-commands:
+      - 'tellraw @a [{"text":"Un ","color":"gray"},{"text":"Mercante Misterioso","color":"green","bold":true},{"text":" è stato avvistato nei dintorni! Si dice che abbia merci rare...","color":"gray"}]'
+      # Qui potresti mettere un comando per spawnare un NPC custom in un punto specifico (es. /npc spawn mercante -c 100,64,200)
+    end-commands:
+      - 'tellraw @a {"text":"Il Mercante Misterioso è ripartito verso terre lontane.","color":"gray"}'
+      # Comando per rimuovere l'NPC (es. /npc despawn mercante)
+
+  furia_elementale:
+    display-name: "&3&lFuria Elementale"
+    type: RANDOM
+    conditions:
+      chance: 2
+    duration-days: -1 # Dura finché non viene terminato manualmente
+    start-commands:
+      - 'tellraw @a [{"text":"I cieli si sono infuriati!","color":"dark_aqua","bold":true},{"text":" Una tempesta senza fine si è abbattuta sul mondo!","color":"gray"}]'
+      - "weather thunder 999999" # Tempesta "infinita"
+    end-commands:
+      - "weather clear"
+      - 'tellraw @a {"text":"La furia degli elementi si è placata.","color":"aqua"}'
+
+  # ====================== #
+  #     EVENTI A DATA FISSA    #
+  # ====================== #
+  primo_giorno:
+    display-name: "&aL'Inizio dell'Avventura"
+    type: FIXED_DATE
+    trigger-date: "01/01/0001" # Si attiva solo il primo giorno del primo anno
+    duration-days: 1
+    start-commands:
+      - 'tellraw @a [{"text":"Benvenuti!","color":"gold","bold":true},{"text":" Che la vostra avventura in queste terre abbia inizio!","color":"yellow"}]'
+    end-commands: []
+
+  anniversario:
+    display-name: "&dPrimo Anniversario del Server"
+    type: FIXED_DATE
+    trigger-date: "01/01/0002" # Si attiva solo il primo giorno del secondo anno
+    duration-days: 1
+    start-commands:
+      - 'tellraw @a [{"text":"Un anno è passato!","color":"light_purple","bold":true},{"text":" Grazie a tutti per aver reso questo server un posto speciale!","color":"white"}]'
+      - 'give @a cake 1'
+    end-commands: []

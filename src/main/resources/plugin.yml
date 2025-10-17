@@ -1,0 +1,14 @@
+name: CalendarioPlugin
+version: 1.7 # Ti consiglio di aumentare la versione
+main: it.cdl.calendario.CalendarioPlugin
+api-version: '1.21'
+author: ManuX
+description: Un plugin per simulare un calendario in Minecraft.
+commands:
+  calendario:
+    description: Comando per gestire il calendario.
+    usage: |
+      /calendario set <giorno|mese|anno> <valore>
+      /calendario reload
+      /calendario evento <start|end|status> [id]
+    permission: bukkit.command.op
