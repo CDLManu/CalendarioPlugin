@@ -13,9 +13,10 @@ import java.util.Map;
 import java.util.Random;
 
 /**
- * Gestisce il caricamento, l'attivazione e la terminazione di eventi personalizzati.
- * Legge gli eventi dal file events.yml e controlla ogni giorno se le condizioni
- * per l'avvio di un nuovo evento sono soddisfatte.
+ * Gestisce il ciclo di vita degli eventi personalizzati del server.
+ * Questa classe è responsabile del caricamento degli eventi dal file {@code events.yml},
+ * della verifica delle condizioni di attivazione al cambio del giorno e dell'esecuzione
+ * dei comandi associati all'inizio e alla fine di un evento.
  */
 public class EventManager {
 
@@ -23,16 +24,31 @@ public class EventManager {
     private final Map<String, CustomEvent> loadedEvents = new HashMap<>();
     private final Random random = new Random();
 
+    /**
+     * L'evento attualmente attivo sul server.
+     * È {@code null} se nessun evento è in corso.
+     */
     private CustomEvent activeEvent = null;
+    /**
+     * Il numero di giorni rimanenti prima della conclusione dell'evento attivo.
+     */
     private int daysRemaining = 0;
 
+    /**
+     * Costruttore dell'EventManager.
+     * Inizializza il manager e avvia il caricamento degli eventi.
+     *
+     * @param plugin L'istanza principale del plugin.
+     */
     public EventManager(CalendarioPlugin plugin) {
         this.plugin = plugin;
         loadEvents();
     }
 
     /**
-     * Carica tutti gli eventi definiti nel file events.yml e li memorizza in una mappa.
+     * Carica e convalida tutti gli eventi definiti nel file {@code events.yml}.
+     * Se il file non esiste, viene creato a partire dalle risorse del plugin.
+     * Ogni evento viene mappato in un oggetto {@link CustomEvent} e memorizzato.
      */
     private void loadEvents() {
         File eventsFile = new File(plugin.getDataFolder(), "events.yml");
@@ -49,7 +65,7 @@ public class EventManager {
 
             CustomEvent event = new CustomEvent(
                     eventId.toLowerCase(),
-                    eventData.getString("display-name", "Evento Senza Nome"),
+                    eventData.getString("display-name", "Nameless Event"),
                     eventData.getString("type", "RANDOM").toUpperCase(),
                     eventData.getString("trigger-date", ""),
                     eventData.getInt("conditions.chance", 0),
@@ -64,54 +80,52 @@ public class EventManager {
     }
 
     /**
-     * Metodo chiamato all'inizio di un nuovo giorno.
-     * Gestisce la durata dell'evento attivo o controlla se un nuovo evento deve iniziare.
+     * Metodo principale chiamato all'inizio di un nuovo giorno.
+     * Gestisce il countdown della durata dell'evento attivo e, se termina, lo conclude.
+     * Se nessun evento è attivo, controlla se le condizioni per l'avvio di un nuovo
+     * evento sono soddisfatte.
      */
     public void onNewDay() {
-        // --- LOGICA COMPLETAMENTE RISCRITTA ---
-
-        // Fase 1: Gestire l'evento attualmente attivo.
         if (activeEvent != null) {
-            // Decrementa la durata se l'evento non è infinito.
             if (daysRemaining > 0) {
                 daysRemaining--;
             }
-
-            // Controlla se l'evento è terminato.
+            // Conclude l'evento solo se la durata non è infinita (-1)
             if (daysRemaining == 0 && activeEvent.durationDays() != -1) {
                 endActiveEvent();
             }
         }
-
-        // Fase 2: Se NON c'è nessun evento attivo (o è appena terminato), controlla se ne deve iniziare uno nuovo.
+        // Se, dopo il controllo, non c'è un evento attivo, prova ad avviarne uno nuovo.
         if (activeEvent == null) {
             TimeManager tm = plugin.getTimeManager();
             for (CustomEvent event : loadedEvents.values()) {
                 if (shouldEventStart(event, tm)) {
                     startEvent(event);
-                    break; // Avvia al massimo un evento al giorno.
+                    break; // Avvia solo un evento al giorno
                 }
             }
         }
     }
 
     /**
-     * Gestisce un cambio di data manuale tramite comando.
-     * Termina qualsiasi evento attivo e controlla se un nuovo evento deve iniziare nella nuova data.
+     * Gestisce la logica da eseguire quando la data viene modificata manualmente tramite comando.
+     * Termina forzatamente l'evento attivo e riesegue il controllo di inizio giornata.
      */
     public void handleDateChange() {
+        LanguageManager lang = plugin.getLanguageManager();
         if (activeEvent != null) {
-            plugin.getLogger().info("Cambio data manuale: l'evento '" + activeEvent.displayName() + "' viene terminato forzatamente.");
+            plugin.getLogger().info(lang.getString("events.date-change-end", "{eventName}", activeEvent.displayName()));
             endActiveEvent();
         }
-        onNewDay();
+        onNewDay(); // Simula un nuovo giorno per ricalibrare gli eventi
     }
 
     /**
-     * Controlla se un evento soddisfa le condizioni per essere avviato nella data corrente.
+     * Valuta se un dato evento debba iniziare in base alla data corrente e al tipo di evento.
+     *
      * @param event L'evento da controllare.
-     * @param tm Un riferimento al TimeManager.
-     * @return true se l'evento deve iniziare, altrimenti false.
+     * @param tm    Il TimeManager per ottenere la data e la stagione correnti.
+     * @return {@code true} se l'evento deve iniziare, altrimenti {@code false}.
      */
     private boolean shouldEventStart(CustomEvent event, TimeManager tm) {
         int currentDay = tm.getGiornoCorrente();
@@ -142,7 +156,8 @@ public class EventManager {
     }
 
     /**
-     * Avvia un evento, eseguendo i suoi comandi di inizio.
+     * Avvia un evento, impostandolo come attivo ed eseguendone i comandi di inizio.
+     *
      * @param event L'evento da avviare.
      */
     private void startEvent(CustomEvent event) {
@@ -150,19 +165,19 @@ public class EventManager {
         this.daysRemaining = event.durationDays();
 
         String displayName = event.displayName().replace('&', '§');
-        plugin.getLogger().info("Evento iniziato: " + displayName);
+        plugin.getLogger().info(plugin.getLanguageManager().getString("events.event-started-log", "{eventName}", displayName));
 
         executeCommands(event.startCommands());
     }
 
     /**
-     * Termina l'evento attualmente attivo, eseguendo i suoi comandi di fine.
+     * Termina l'evento attualmente attivo, eseguendone i comandi di fine e resettando lo stato.
      */
     public void endActiveEvent() {
         if (activeEvent == null) return;
 
         String displayName = activeEvent.displayName().replace('&', '§');
-        plugin.getLogger().info("Evento terminato: " + displayName);
+        plugin.getLogger().info(plugin.getLanguageManager().getString("events.event-ended-log", "{eventName}", displayName));
 
         executeCommands(activeEvent.endCommands());
 
@@ -171,46 +186,14 @@ public class EventManager {
     }
 
     /**
-     * Esegue una lista di comandi dalla console.
-     * @param commands La lista di comandi da eseguire.
+     * Esegue una lista di comandi tramite la console del server.
+     *
+     * @param commands La lista di stringhe di comandi da eseguire.
      */
     private void executeCommands(List<String> commands) {
         for (String cmd : commands) {
-            // --- CORREZIONE DEL TYPO BUKKICK -> BUKKIT ---
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
         }
     }
 
-    /**
-     * Forza l'avvio di un evento tramite comando.
-     * @param eventId L'ID dell'evento da avviare.
-     * @return true se l'evento è stato trovato e avviato, altrimenti false.
-     */
-    public boolean forceStartEvent(String eventId) {
-        CustomEvent event = loadedEvents.get(eventId.toLowerCase());
-        if (event != null) {
-            if (activeEvent != null) {
-                endActiveEvent();
-            }
-            startEvent(event);
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Forza la terminazione dell'evento attivo tramite comando.
-     * @return true se un evento era attivo ed è stato terminato, altrimenti false.
-     */
-    public boolean forceEndActiveEvent() {
-        if (activeEvent != null) {
-            endActiveEvent();
-            return true;
-        }
-        return false;
-    }
-
-    public CustomEvent getActiveEvent() {
-        return activeEvent;
-    }
 }

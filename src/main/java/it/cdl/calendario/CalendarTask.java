@@ -4,46 +4,65 @@ import org.bukkit.World;
 import org.bukkit.scheduler.BukkitRunnable;
 
 /**
- * Rappresenta il "cuore" pulsante del plugin.
- * Questo task, eseguito ogni secondo, è responsabile di:
- * 1. Gestire l'avanzamento personalizzato del tempo nel mondo.
- * 2. Rilevare il passaggio dei giorni per aggiornare il calendario.
- * 3. Innescare gli aggiornamenti per gli altri sistemi (BossBar, stagioni).
+ * Rappresenta il "cuore" pulsante del plugin Calendario.
+ * Questo task, eseguito a intervalli regolari, è responsabile della gestione
+ * del ciclo temporale personalizzato del mondo di gioco. Le sue responsabilità includono:
+ * <ul>
+ * <li>Avanzamento del tempo con velocità variabile in base alla stagione e alla configurazione.</li>
+ * <li>Rilevamento del passaggio dei giorni per aggiornare il calendario interno.</li>
+ * <li>Innescare gli aggiornamenti per i manager dipendenti (es. {@link BossBarManager}, {@link SeasonalEffectsManager}).</li>
+ * </ul>
  */
 public class CalendarTask extends BukkitRunnable {
 
-    // --- Riferimenti ai componenti del plugin ---
     private final CalendarioPlugin plugin;
     private final World world;
     private final TimeManager timeManager;
     private final BossBarManager bossBarManager;
     private final SeasonalEffectsManager seasonalEffectsManager;
 
-    // --- Stato interno del task ---
-    /** Il numero totale di giorni di Minecraft trascorsi dall'ultimo controllo. Serve per rilevare quando un nuovo giorno è iniziato. */
+    /**
+     * Memorizza il totale dei giorni trascorsi dall'ultimo controllo per rilevare in modo affidabile
+     * l'inizio di un nuovo giorno.
+     */
     private long lastCheckedTotalDays;
-    /** Il mese corrente, memorizzato per rilevare quando avviene un cambio di mese. */
+    /**
+     * Cache del mese corrente per rilevare un cambio di mese e, di conseguenza, di stagione.
+     */
     private int cachedMonth;
-    /** La stagione corrente, memorizzata per rilevare quando avviene un cambio di stagione. */
+    /**
+     * Cache della stagione corrente per identificare un cambio di stagione e attivare gli effetti associati.
+     */
     private TimeManager.Stagione lastCheckedSeason;
 
-    // --- Costanti di tempo di Minecraft ---
-    /** Il tick in cui inizia il tramonto in Minecraft (sera). */
+    /**
+     * Il tick di Minecraft in cui il tempo passa da giorno a notte (tramonto).
+     */
     private static final long SUNSET_TICKS = 13000L;
-    /** Il numero totale di tick in un giorno completo di Minecraft. */
+    /**
+     * Il numero totale di tick in un ciclo giornaliero completo di Minecraft.
+     */
     private static final long DAY_CYCLE_TICKS = 24000L;
 
-    // --- Variabili per la velocità del tempo ---
-    /** La quantità di tick da aggiungere al secondo durante il giorno, calcolata in base alla configurazione. */
+    /**
+     * La velocità di avanzamento del tempo (tick/secondo) durante il giorno.
+     */
     private double dayTickRate;
-    /** La quantità di tick da aggiungere al secondo durante la notte. */
+    /**
+     * La velocità di avanzamento del tempo (tick/secondo) durante la notte.
+     */
     private double nightTickRate;
-    /** Accumula i tick frazionari tra un'esecuzione e l'altra per garantire una precisione temporale perfetta. */
+    /**
+     * Accumula i valori frazionari dei tick per garantire una progressione temporale precisa,
+     * prevenendo perdite di precisione dovute agli arrotondamenti.
+     */
     private double tickAccumulator = 0.0;
 
     /**
-     * Costruttore del task.
-     * Inizializza tutti i riferimenti e le variabili di stato.
+     * Costruttore del task principale del calendario.
+     * Inizializza i riferimenti hai manager, sincronizza lo stato iniziale con il mondo
+     * e calcola la velocità del tempo iniziale.
+     *
      * @param plugin L'istanza principale del plugin.
      */
     public CalendarTask(CalendarioPlugin plugin) {
@@ -57,26 +76,25 @@ public class CalendarTask extends BukkitRunnable {
             this.cancel();
             return;
         }
-        // Sincronizza lo stato iniziale del task con lo stato attuale del mondo.
+
         this.lastCheckedTotalDays = world.getFullTime() / DAY_CYCLE_TICKS;
         this.lastCheckedSeason = timeManager.getEnumStagioneCorrente();
         this.cachedMonth = timeManager.getMeseCorrente();
         this.tickAccumulator = this.world.getTime() % 1.0;
-        // Calcola la velocità del tempo iniziale.
         updateSeasonalSpeed();
     }
 
     /**
-     * Metodo chiamato dal SleepListener per notificare al task che il tempo è stato
-     * saltato a causa del sonno. Resetta l'accumulatore per ripartire fluidamente.
+     * Resetta l'accumulatore di tick. Invocato quando il tempo viene alterato istantaneamente,
+     * come dopo che i giocatori hanno dormito, per evitare salti temporali imprevisti.
      */
     public void acceptTimeSkip() {
         this.tickAccumulator = 0.0;
     }
 
     /**
-     * Forza un aggiornamento immediato della velocità del tempo e della BossBar.
-     * Utile dopo comandi manuali come /calendario set.
+     * Forza un ricalcolo immediato della velocità del tempo e un aggiornamento
+     * dei sistemi dipendenti. Essenziale dopo modifiche manuali alla data tramite comandi.
      */
     public void forceUpdate() {
         updateSeasonalSpeed();
@@ -90,26 +108,36 @@ public class CalendarTask extends BukkitRunnable {
     }
 
     /**
-     * Legge la durata del giorno e della notte dalla configurazione in base alla stagione
-     * corrente e ricalcola la velocità di avanzamento del tempo (tick per secondo).
+     * Aggiorna le variabili {@code dayTickRate} e {@code nightTickRate} leggendo i valori
+     * dal file di configurazione in base alla stagione corrente.
+     * Questo metodo permette di avere cicli giorno/notte di durata variabile.
      */
     private void updateSeasonalSpeed() {
         this.cachedMonth = timeManager.getMeseCorrente();
         TimeManager.Stagione stagione = timeManager.getEnumStagioneCorrente();
-        String seasonName = stagione.name().toLowerCase();
-        double realSecondsForDay = plugin.getConfig().getDouble("time-cycle." + seasonName + ".day-duration-seconds", 600.0);
-        double realSecondsForNight = plugin.getConfig().getDouble("time-cycle." + seasonName + ".night-duration-seconds", 600.0);
+        double realSecondsForDay;
+        double realSecondsForNight;
+
+        String seasonConfigKey = switch (stagione) {
+            case INVERNO -> "inverno";
+            case PRIMAVERA -> "primavera";
+            case ESTATE -> "estate";
+            case AUTUNNO -> "autunno";
+        };
+
+        realSecondsForDay = plugin.getConfig().getDouble("time-cycle." + seasonConfigKey + ".day-duration-seconds", 600.0);
+        realSecondsForNight = plugin.getConfig().getDouble("time-cycle." + seasonConfigKey + ".night-duration-seconds", 600.0);
+
         this.dayTickRate = SUNSET_TICKS / realSecondsForDay;
         this.nightTickRate = (DAY_CYCLE_TICKS - SUNSET_TICKS) / realSecondsForNight;
     }
 
     /**
-     * Metodo principale eseguito ogni secondo (20 tick di gioco).
-     * Contiene la logica fondamentale del plugin.
+     * Metodo principale del task, eseguito a ogni ciclo dello scheduler.
+     * Contiene la logica di avanzamento del tempo e il rilevamento del cambio di giorno/stagione.
      */
     @Override
     public void run() {
-        // 1. Logica di avanzamento del tempo personalizzato
         boolean isDay = world.getTime() < SUNSET_TICKS;
         double currentTickRate = isDay ? dayTickRate : nightTickRate;
         tickAccumulator += currentTickRate;
@@ -117,24 +145,21 @@ public class CalendarTask extends BukkitRunnable {
 
         if (ticksToApply > 0) {
             world.setFullTime(world.getFullTime() + ticksToApply);
-            tickAccumulator -= ticksToApply; // Sottrae solo la parte intera applicata.
+            tickAccumulator -= ticksToApply;
         }
 
-        // 2. Logica centralizzata di avanzamento del giorno
         long currentTotalDays = world.getFullTime() / DAY_CYCLE_TICKS;
         if (currentTotalDays > lastCheckedTotalDays) {
-            // Questo blocco ora gestisce tutti i passaggi di giorno (naturale, sonno, comandi).
             long daysPassed = currentTotalDays - lastCheckedTotalDays;
             for (int i = 0; i < daysPassed; i++) {
                 timeManager.advanceDayWithBroadcast();
-                plugin.getEventManager().onNewDay(); // <-- NUOVA RIGA
+                plugin.getEventManager().onNewDay();
             }
-            lastCheckedTotalDays = currentTotalDays; // Aggiorna il contatore.
+            lastCheckedTotalDays = currentTotalDays;
 
-            // 3. Controlla se è cambiato anche il mese (e la stagione)
             int newMonth = timeManager.getMeseCorrente();
             if (newMonth != cachedMonth) {
-                updateSeasonalSpeed(); // Ricalcola la velocità del tempo.
+                updateSeasonalSpeed();
                 TimeManager.Stagione newSeason = timeManager.getEnumStagioneCorrente();
                 if (newSeason != lastCheckedSeason) {
                     plugin.getLogger().info("La stagione è cambiata da " + lastCheckedSeason.name() + " a " + newSeason.name() + "!");
@@ -143,8 +168,6 @@ public class CalendarTask extends BukkitRunnable {
                 }
             }
         }
-
-        // 4. Aggiorna sempre la BossBar per mostrare l'ora corretta.
         bossBarManager.updateBossBars();
     }
 }

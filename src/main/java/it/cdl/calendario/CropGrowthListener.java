@@ -41,7 +41,7 @@ public final class CropGrowthListener implements Listener {
     private static final Set<Material> COLTURE_AUTUNNALI = Set.of(
             Material.WHEAT, Material.CARROTS, Material.POTATOES
     );
-    // Nota: L'Inverno non ha un set definito, quindi nessuna pianta è considerata "di stagione".
+    //L'Inverno non ha un set definito, quindi nessuna pianta è considerata "di stagione".
 
     /**
      * Metodo chiamato da Bukkit ogni volta che un blocco tenta di crescere (es. Una pianta).

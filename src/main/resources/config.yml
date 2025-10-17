@@ -1,30 +1,40 @@
 # ================================================================= #
-#                  Configurazione CalendarioPlugin                  #
+#                  CalendarioPlugin Configuration                   #
 # ================================================================= #
-# Questo file di configurazione ti permette di personalizzare ogni #
-# aspetto del plugin Calendario, dal tempo agli effetti visivi.     #
+# This configuration file allows you to customize every aspect of   #
+# the Calendario plugin, from time settings to visual effects.      #
 # ----------------------------------------------------------------- #
+
+# --- GENERAL SETTINGS ---
+# Sets the plugin's language. This corresponds to the file name in 'plugins/CalendarioPlugin/lang/'.
+# Included languages: en_US, it_IT.
+language: "en_US"
+
+# Set to 'true' to enable debug messages in the console.
 debug-mode: false
-# Impostazioni del Tempo
-# Controlla la durata del ciclo giorno/notte in secondi reali per ogni stagione.
-# Un giorno di Minecraft standard dura 1200 secondi (600 giorno, 600 notte).
+
+
+# --- TIME SETTINGS ---
+# Controls the duration of the day/night cycle in real seconds for each season.
+# A standard Minecraft day lasts 1200 seconds (600 for day, 600 for night).
 time-cycle:
   primavera:
-    day-duration-seconds: 600  # 10 minuti
-    night-duration-seconds: 600 # 10 minuti
+    day-duration-seconds: 600  # 10 minutes
+    night-duration-seconds: 600 # 10 minutes
   estate:
-    day-duration-seconds: 900  # 15 minuti
-    night-duration-seconds: 300 # 5 minuti
+    day-duration-seconds: 900  # 15 minutes
+    night-duration-seconds: 300 # 5 minutes
   autunno:
-    day-duration-seconds: 600  # 10 minuti
-    night-duration-seconds: 600 # 10 minuti
+    day-duration-seconds: 600  # 10 minutes
+    night-duration-seconds: 600 # 10 minutes
   inverno:
-    day-duration-seconds: 420  # 7 minuti
-    night-duration-seconds: 780 # 13 minuti
+    day-duration-seconds: 420  # 7 minutes
+    night-duration-seconds: 780 # 13 minutes
 
-# Resource Pack Stagionali (Compatibile Vanilla)
-# Inserisci i link di download diretto e gli hash SHA-1 per ogni resource pack.
-# Se non vuoi inviare una pack per una certa stagione, lascia l'URL vuoto ("").
+
+# --- SEASONAL RESOURCE PACKS (Vanilla Compatible) ---
+# Enter the direct download links and SHA-1 hashes for each resource pack.
+# If you don't want to send a pack for a certain season, leave the URL empty ("").
 resource-packs:
   primavera:
     url: ""
@@ -39,50 +49,51 @@ resource-packs:
     url: ""
     sha1: ""
 
+
+# --- SLEEP MECHANICS ---
+# Percentage of players (from 0 to 100) required to sleep to skip the night.
+# Setting it to 100 means everyone must sleep. Setting it to 50 means only half need to.
+# If this option is not present, the default value will be 100.
 sleep-mechanics:
-  # Percentuale di giocatori (da 0 a 100) che devono dormire per saltare la notte.
-  # Impostando 100, tutti devono dormire. Impostando 50, basta la metà.
-  # Se questa opzione non è presente, il valore di default sarà 100.
   players-sleeping-percentage: 100
 
-# Impostazioni Effetti Visivi
+
+# --- VISUAL EFFECTS SETTINGS ---
 visual-effects:
   inverno:
-    # Probabilità (0-100) che avvenga un tentativo di piazzare neve/ghiaccio.
-    # Più alto = congelamento più rapido.
+    # Probability (0-100) of an attempt to place snow/ice.
+    # A higher value means faster freezing.
     freeze-chance: 50
   primavera:
-    # Probabilità che avvenga un tentativo di sciogliere neve/ghiaccio.
+    # Probability of an attempt to melt snow/ice.
     thaw-chance: 35
-    # Probabilità (0-100) di far sbocciare un fiore sull'erba liberata dalla neve.
+    # Probability (0-100) of spawning a flower on grass freed from snow.
     flower-spawn-chance: 5
 
-# Impostazioni Agricoltura Stagionale
+
+# --- SEASONAL FARMING SETTINGS ---
 seasonal-farming:
-  # Probabilità (da 0.0 a 1.0) che una pianta fuori stagione possa crescere.
-  # 0.25 = 25% di possibilità. 0.0 = crescita completamente bloccata.
+  # Probability (from 0.0 to 1.0) that an out-of-season plant can grow.
+  # 0.25 = 25% chance. 0.0 = growth is completely blocked.
   out-of-season-growth-chance: 0.25
 
 
-# Impostazioni Boss Bar
+# --- BOSS BAR SETTINGS ---
 bossbar:
-  # --- NUOVA OPZIONE ---
-  # Imposta su 'false' per disabilitare completamente la Boss Bar per tutti.
+  # Set to 'false' to completely disable the Boss Bar for everyone.
   enabled: true
-  # --- NUOVA OPZIONE ---
-  # Imposta su 'false' per nascondere la barra di progressione colorata
-  # e mostrare solo il testo.
+  # Set to 'false' to hide the colored progress bar and show only the text.
   show-progress-bar: false
-  # ---------------------
-  # Formato del titolo. Segnaposto: {data}, {stagione}, {meteo}, {ora}
+  # Title format. Placeholders: {data}, {stagione}, {meteo}, {ora}
   format: "&a{data} &8| {stagione} &8| {meteo} &8| &e{ora}"
-  # Colore della barra: BLUE, GREEN, PINK, PURPLE, RED, WHITE, YELLOW
+  # Bar color: BLUE, GREEN, PINK, PURPLE, RED, WHITE, YELLOW
   bar-color: "BLUE"
-  # Stile della barra: SOLID, SEGMENTED_6, SEGMENTED_10, SEGMENTED_12, SEGMENTED_20
+  # Bar style: SOLID, SEGMENTED_6, SEGMENTED_10, SEGMENTED_12, SEGMENTED_20
   bar-style: "SOLID"
 
+
 # ================================================================= #
-#      DATI INTERNI DEL CALENDARIO - NON MODIFICARE A MANO          #
+#      INTERNAL CALENDAR DATA - DO NOT MODIFY MANUALLY              #
 # ================================================================= #
 calendario:
   anno: 1

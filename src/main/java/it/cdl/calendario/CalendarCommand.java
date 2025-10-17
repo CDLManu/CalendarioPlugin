@@ -6,210 +6,123 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
- * Gestisce l'esecuzione e il completamento tramite Tab del comando /calendario.
- * Include sottocomandi per la gestione della data, il reload del plugin e la
- * manipolazione del sistema di eventi.
+ * Gestisce tutti i comandi relativi al plugin Calendario.
+ * Implementa sia CommandExecutor che TabCompleter per la logica e l'auto completamento.
  */
-public record CalendarCommand(CalendarioPlugin plugin) implements CommandExecutor, TabCompleter {
+public class CalendarCommand implements CommandExecutor, TabCompleter {
 
-    private static final List<String> MAIN_COMMANDS = Arrays.asList("set", "reload", "evento");
-    private static final List<String> SET_COMMANDS = Arrays.asList("giorno", "mese", "anno");
-    private static final List<String> EVENT_COMMANDS = Arrays.asList("start", "end", "status");
+    private final CalendarioPlugin plugin;
+    private final LanguageManager lang;
+
+    public CalendarCommand(CalendarioPlugin plugin) {
+        this.plugin = plugin;
+        this.lang = plugin.getLanguageManager();
+    }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if (!sender.isOp()) {
-            sender.sendMessage("§cDevi essere un operatore per usare questo comando.");
-            return true;
-        }
-
         if (args.length == 0) {
-            sendHelpMessage(sender);
+            // TODO: Mostra un messaggio di aiuto
             return true;
         }
 
-        String mainArg = args[0].toLowerCase();
+        String subCommand = args[0].toLowerCase();
 
-        switch (mainArg) {
+        switch (subCommand) {
             case "reload" -> handleReload(sender);
             case "set" -> handleSet(sender, args);
-            case "evento" -> handleEvent(sender, args);
-            default -> sendHelpMessage(sender);
+            case "event" -> handleEvent();
+            default -> {
+                // TODO: Messaggio di comando non valido
+                return true;
+            }
         }
         return true;
     }
 
-    /**
-     * Gestisce la logica per il sottocomando "/calendario reload".
-     * @param sender L'esecutore del comando.
-     */
     private void handleReload(CommandSender sender) {
-        sender.sendMessage("§eRicaricamento di CalendarioPlugin in corso...");
-        TimeManager oldTimeManager = plugin.getTimeManager();
-        int currentDay = oldTimeManager.getGiornoCorrente();
-        int currentMonth = oldTimeManager.getMeseCorrente();
-        int currentYear = oldTimeManager.getAnnoCorrente();
-        plugin.shutdownPluginSystems();
-        plugin.reloadConfig();
-        plugin.startupPluginSystems();
-        TimeManager newTimeManager = plugin.getTimeManager();
-        newTimeManager.setGiornoCorrente(currentDay);
-        newTimeManager.setMeseCorrente(currentMonth);
-        newTimeManager.setAnnoCorrente(currentYear);
-        sender.sendMessage("§aCalendarioPlugin ricaricato con successo! Le modifiche sono state applicate.");
+        if (!sender.isOp()) {
+            sender.sendMessage(lang.getString("commands.no-permission"));
+            return;
+        }
+        plugin.reload();
+        sender.sendMessage(lang.getString("commands.reload-success"));
     }
 
-    /**
-     * Gestisce la logica per il sottocomando "/calendario set", validando l'immissione.
-     * @param sender L'esecutore del comando.
-     * @param args Gli argomenti del comando.
-     */
     private void handleSet(CommandSender sender, String[] args) {
+        if (!sender.isOp()) {
+            sender.sendMessage(lang.getString("commands.no-permission"));
+            return;
+        }
         if (args.length < 3) {
-            sendHelpMessage(sender);
+            // TODO: Messaggio di uso corretto /calendario set <giorno|mese|anno> <valore>
             return;
         }
 
-        String tipo = args[1].toLowerCase();
-        int valore;
+        String type = args[1].toLowerCase();
+        int value;
         try {
-            valore = Integer.parseInt(args[2]);
+            value = Integer.parseInt(args[2]);
         } catch (NumberFormatException e) {
-            sender.sendMessage("§cIl valore deve essere un numero.");
+            sender.sendMessage(lang.getString("commands.invalid-value-number"));
             return;
         }
 
         TimeManager tm = plugin.getTimeManager();
-        switch (tipo) {
+        switch (type) {
             case "giorno" -> {
-                if (valore < 1 || valore > tm.getGiorniNelMese(tm.getMeseCorrente())) {
-                    sender.sendMessage("§cValore per il giorno non valido. Per il mese corrente, deve essere tra 1 e " + tm.getGiorniNelMese(tm.getMeseCorrente()) + ".");
+                if (value < 1 || value > tm.getGiorniNelMese()) {
+                    sender.sendMessage(lang.getString("commands.invalid-value-day", "{maxDays}", String.valueOf(tm.getGiorniNelMese())));
                     return;
                 }
-                tm.setGiornoCorrente(valore);
+                tm.setGiorno(value);
             }
             case "mese" -> {
-                if (valore < 1 || valore > 12) {
-                    sender.sendMessage("§cValore per il mese non valido. Deve essere tra 1 e 12.");
+                if (value < 1 || value > 12) {
+                    sender.sendMessage(lang.getString("commands.invalid-value-month"));
                     return;
                 }
-                tm.setMeseCorrente(valore);
+                tm.setMese(value);
             }
             case "anno" -> {
-                if (valore < 1) {
-                    sender.sendMessage("§cValore per l'anno non valido. Deve essere 1 o superiore.");
+                if (value < 1) {
+                    sender.sendMessage(lang.getString("commands.invalid-value-year"));
                     return;
                 }
-                tm.setAnnoCorrente(valore);
+                tm.setAnno(value);
             }
             default -> {
-                sendHelpMessage(sender);
+                // TODO: Messaggio di uso corretto
                 return;
             }
         }
 
-        plugin.getMainTaskInstance().forceUpdate();
         plugin.getEventManager().handleDateChange();
-        sender.sendMessage("§aData aggiornata. Tutti i sistemi stagionali sono stati ricalibrati.");
+        plugin.getMainTaskInstance().forceUpdate();
+        sender.sendMessage(lang.getString("commands.date-updated"));
     }
 
-    /**
-     * Gestisce la logica per il sottocomando "/calendario evento".
-     * @param sender L'esecutore del comando.
-     * @param args Gli argomenti del comando.
-     */
-    private void handleEvent(CommandSender sender, String[] args) {
-        if (args.length < 2) {
-            sendHelpMessage(sender);
-            return;
-        }
-
-        String subCommand = args[1].toLowerCase();
-        EventManager em = plugin.getEventManager();
-
-        switch (subCommand) {
-            case "start" -> {
-                if (args.length < 3) {
-                    sender.sendMessage("§cUsage: /calendario evento start <id_evento>");
-                    return;
-                }
-                if (em.forceStartEvent(args[2])) {
-                    sender.sendMessage("§aEvento '" + args[2] + "' avviato forzatamente.");
-                } else {
-                    sender.sendMessage("§cEvento '" + args[2] + "' non trovato in events.yml.");
-                }
-            }
-            case "end" -> {
-                if (em.forceEndActiveEvent()) {
-                    sender.sendMessage("§eEvento attivo terminato forzatamente.");
-                } else {
-                    sender.sendMessage("§cNon c'è nessun evento attivo da terminare.");
-                }
-            }
-            case "status" -> {
-                CustomEvent active = em.getActiveEvent();
-                if (active != null) {
-                    sender.sendMessage("§aEvento attivo: " + active.displayName().replace('&', '§'));
-                } else {
-                    sender.sendMessage("§eNessun evento attivo al momento.");
-                }
-            }
-            default -> sendHelpMessage(sender);
-        }
+    private void handleEvent() {
+        // Implementazione della logica per gestire gli eventi
     }
 
-    /**
-     * Invia un messaggio di aiuto formattato al mittente del comando.
-     * @param sender L'entità a cui inviare il messaggio.
-     */
-    private void sendHelpMessage(CommandSender sender) {
-        sender.sendMessage("§6--- Comandi CalendarioPlugin ---");
-        sender.sendMessage("§e/calendario set <giorno|mese|anno> <valore> §7- Imposta la data.");
-        sender.sendMessage("§e/calendario reload §7- Ricarica la configurazione del plugin.");
-        sender.sendMessage("§e/calendario evento <start|end|status> [id] §7- Gestisce gli eventi.");
-    }
 
-    /**
-     * Metodo che gestisce i suggerimenti automatici quando l'utente preme il tasto Tab.
-     * @return Una lista di suggerimenti appropriati al contesto.
-     */
     @Override
-    public @NotNull List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
-        if (!sender.isOp()) {
-            return Collections.emptyList();
-        }
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
+        if (!sender.isOp()) return null;
 
         if (args.length == 1) {
-            String input = args[0].toLowerCase();
-            return MAIN_COMMANDS.stream()
-                    .filter(cmd -> cmd.startsWith(input))
-                    .collect(Collectors.toList());
+            return List.of("set", "reload", "event");
         }
 
-        if (args.length == 2) {
-            String mainArg = args[0].toLowerCase();
-            String input = args[1].toLowerCase();
-
-            List<String> sourceList = null;
-            if (mainArg.equals("set")) {
-                sourceList = SET_COMMANDS;
-            } else if (mainArg.equals("evento")) {
-                sourceList = EVENT_COMMANDS;
-            }
-
-            if (sourceList != null) {
-                return sourceList.stream()
-                        .filter(cmd -> cmd.startsWith(input))
-                        .collect(Collectors.toList());
-            }
+        if (args.length == 2 && args[0].equalsIgnoreCase("set")) {
+            return List.of("giorno", "mese", "anno");
         }
 
-        return Collections.emptyList();
+        return new ArrayList<>();
     }
 }

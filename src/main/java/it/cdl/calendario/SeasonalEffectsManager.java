@@ -22,102 +22,143 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 /**
- * Gestisce tutti gli effetti visivi legati alle stagioni e il logging per specifici blocchi.
- * Agisce come Listener per catturare i piazzamenti di blocchi da parte dei giocatori e utilizza
- * task schedulati per applicare cambiamenti ambientali come la formazione di neve e lo scioglimento.
+ * Gestisce l'applicazione di effetti visivi e ambientali legati alle stagioni.
+ * Questa classe agisce come Listener per eventi specifici (es. Piazzamento di blocchi)
+ * e orchestra task asincroni per modificare l'ambiente, come la formazione di neve
+ * in inverno o lo scioglimento in primavera.
  */
 public class SeasonalEffectsManager implements Listener {
 
     private final CalendarioPlugin plugin;
-    /** Un'unica istanza di Random per migliorare le performance. */
     private final Random random = new Random();
-    /** Riferimento al task degli effetti stagionali attualmente attivo, per permetterne l'interruzione. */
+
+    /**
+     * Riferimento al task Bukkit attualmente attivo per gli effetti stagionali.
+     * Viene mantenuto per poterlo annullare al cambio di stagione.
+     */
     private BukkitTask activeEffectTask = null;
 
-    /** Insieme di blocchi il cui piazzamento da parte dei giocatori verrà loggato se il debug è attivo. */
+    /**
+     * Insieme di materiali il cui piazzamento viene tracciato in modalità debug.
+     */
     private static final Set<Material> LOGGED_BLOCKS = Set.of(
             Material.ICE, Material.SNOW, Material.SNOW_BLOCK, Material.POWDER_SNOW
     );
-    /** Insieme di biomi temperati dove gli effetti stagionali come neve e ghiaccio possono verificarsi. */
+
+    /**
+     * Insieme di biomi considerati "temperati", dove gli effetti di gelo e disgelo
+     * stagionale verranno applicati. Esclude biomi già freddi o troppo caldi.
+     */
     private static final Set<Biome> MILD_BIOMES = Set.of(
             Biome.PLAINS, Biome.FOREST, Biome.BIRCH_FOREST, Biome.DARK_FOREST,
             Biome.TAIGA, Biome.MEADOW, Biome.SWAMP, Biome.RIVER, Biome.BEACH
     );
 
+    /**
+     * Costruttore del manager degli effetti stagionali.
+     *
+     * @param plugin L'istanza principale del plugin.
+     */
     public SeasonalEffectsManager(CalendarioPlugin plugin) {
         this.plugin = plugin;
     }
 
     /**
-     * Ascolta gli eventi di piazzamento di blocchi per loggare quando un giocatore piazza neve o ghiaccio.
-     * Questo log avviene solo se 'debug-mode' è abilitato nel file config.yml.
+     * Intercetta il piazzamento di blocchi da parte dei giocatori.
+     * Se la modalità debug è attiva, registra nella console il piazzamento
+     * di blocchi "freddi" (neve, ghiaccio).
+     *
      * @param event L'evento di piazzamento del blocco.
      */
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
-        // Esegue il codice di debug solo se la modalità è attiva.
         if (plugin.isDebugMode()) {
             Block block = event.getBlockPlaced();
             if (LOGGED_BLOCKS.contains(block.getType())) {
                 Player player = event.getPlayer();
                 Location loc = block.getLocation();
-                String worldName = loc.getWorld().getName();
-                plugin.getLogger().info(String.format(
-                        "[DEBUG] Il giocatore %s ha piazzato %s nel mondo %s alle coordinate X:%.0f Y:%.0f Z:%.0f",
-                        player.getName(),
-                        block.getType().name(),
-                        worldName,
-                        loc.getX(),
-                        loc.getY(),
-                        loc.getZ()
+                plugin.getLogger().info(plugin.getLanguageManager().getString("seasonal-effects.debug-log-player",
+                        "{playerName}", player.getName(),
+                        "{blockType}", block.getType().name(),
+                        "{worldName}", loc.getWorld().getName(),
+                        "{x}", String.format("%.0f", loc.getX()),
+                        "{y}", String.format("%.0f", loc.getY()),
+                        "{z}", String.format("%.0f", loc.getZ())
                 ));
             }
         }
     }
 
     /**
-     * Handler principale per i cambi di stagione. Ferma gli effetti esistenti,
-     * invia il resource pack appropriato e avvia gli effetti della nuova stagione.
-     * @param newSeason La stagione appena iniziata.
+     * Metodo orchestratore chiamato al cambio di stagione.
+     * Interrompe gli effetti precedenti, invia il nuovo resource pack
+     * e avvia i nuovi effetti ambientali corrispondenti.
+     *
+     * @param newSeason La nuova stagione da applicare.
      */
     public void handleSeasonChange(TimeManager.Stagione newSeason) {
         stopAllEffects();
         sendResourcePack(newSeason);
+        LanguageManager lang = plugin.getLanguageManager();
+
+        // --- CORREZIONE: Convertito switch da espressione a istruzione ---
+        // La variabile 'seasonConfigKey' non era necessaria in questo contesto.
+        // Lo switch ora esegue solo le azioni necessarie per ogni stagione.
         switch (newSeason) {
-            case INVERNO -> startWinterEffects();
-            case PRIMAVERA -> startSpringEffects();
-            case AUTUNNO -> startAutumnEffects();
+            case INVERNO -> {
+                plugin.getLogger().info(lang.getString("seasonal-effects.winter-arrival"));
+                startWinterEffects();
+            }
+            case PRIMAVERA -> {
+                plugin.getLogger().info(lang.getString("seasonal-effects.spring-arrival"));
+                startSpringEffects();
+            }
+            case AUTUNNO -> {
+                plugin.getLogger().info(lang.getString("seasonal-effects.autumn-arrival"));
+                startAutumnEffects();
+            }
+            // Il caso ESTATE e default non richiedono azioni specifiche qui.
         }
     }
 
     /**
-     * Invia a tutti i giocatori online il Resource Pack configurato per la stagione specificata.
-     * @param season La stagione per cui inviare il Resource Pack.
+     * Invia a tutti i giocatori online il resource pack stagionale definito nel config.yml.
+     * Se il pack per la stagione corrente non è definito, tenta di usare quello della primavera
+     * come fallback.
+     *
+     * @param season La stagione per cui inviare il resource pack.
      */
     public void sendResourcePack(TimeManager.Stagione season) {
-        String seasonName = season.name().toLowerCase();
-        String url = plugin.getConfig().getString("resource-packs." + seasonName + ".url", "");
-        String sha1 = plugin.getConfig().getString("resource-packs." + seasonName + ".sha1", "");
+        String seasonConfigKey = switch (season) {
+            case INVERNO -> "inverno";
+            case ESTATE -> "estate";
+            case AUTUNNO -> "autunno";
+            default -> "primavera";
+        };
+
+        String url = plugin.getConfig().getString("resource-packs." + seasonConfigKey + ".url", "");
+        String sha1 = plugin.getConfig().getString("resource-packs." + seasonConfigKey + ".sha1", "");
 
         if (url.isEmpty() || sha1.isEmpty()) {
-            plugin.getLogger().info("Nessuna pack trovata per " + seasonName + ", uso quella di default (Primavera)...");
+            plugin.getLogger().info("Nessun resource pack trovato per " + seasonConfigKey + ", usando il default (Primavera)...");
             url = plugin.getConfig().getString("resource-packs.primavera.url", "");
             sha1 = plugin.getConfig().getString("resource-packs.primavera.sha1", "");
         }
 
         if (url.isEmpty() || sha1.isEmpty()) {
-            plugin.getLogger().warning("Nessuna pack di default (Primavera) è impostata. Nessuna resource pack sarà inviata.");
+            plugin.getLogger().warning("Nessun resource pack di default (Primavera) è impostato. Nessun pack verrà inviato.");
             return;
         }
 
-        plugin.getLogger().info("Invio della resource pack per la stagione " + season.name() + " a tutti i giocatori...");
+        plugin.getLogger().info("Invio del resource pack per la stagione " + season.name() + " a tutti i giocatori...");
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.setResourcePack(url, sha1);
         }
     }
 
     /**
-     * Ferma in modo sicuro il task degli effetti visivi attualmente in esecuzione.
+     * Annulla in modo sicuro il task degli effetti stagionali correntemente in esecuzione.
+     * Previene la sovrapposizione di effetti al cambio di stagione.
      */
     public void stopAllEffects() {
         if (activeEffectTask != null && !activeEffectTask.isCancelled()) {
@@ -127,9 +168,12 @@ public class SeasonalEffectsManager implements Listener {
     }
 
     /**
-     * Avvia un task periodico per applicare effetti visivi, eseguendo la logica pesante in modo asincrono.
-     * @param period L'intervallo in tick tra ogni esecuzione.
-     * @param chunkEffect L'azione specifica da eseguire su un chunk.
+     * Avvia un task periodico che applica un effetto a un chunk casuale vicino a un giocatore.
+     * L'operazione di ricerca del blocco viene eseguita in modo asincrono per non impattare
+     * le performance del server.
+     *
+     * @param period      L'intervallo in tick tra ogni esecuzione dell'effetto.
+     * @param chunkEffect L'azione (effetto) da applicare al chunk selezionato.
      */
     private void startSeasonalEffectTask(long period, Consumer<Chunk> chunkEffect) {
         stopAllEffects();
@@ -138,8 +182,10 @@ public class SeasonalEffectsManager implements Listener {
             public void run() {
                 List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
                 if (players.isEmpty()) return;
+
                 Player randomPlayer = players.get(random.nextInt(players.size()));
                 Chunk chunk = randomPlayer.getLocation().getChunk();
+
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                     for (int i = 0; i < 5; i++) {
                         chunkEffect.accept(chunk);
@@ -149,24 +195,33 @@ public class SeasonalEffectsManager implements Listener {
         }.runTaskTimer(plugin, 40L, period);
     }
 
+    /**
+     * Avvia il task per gli effetti invernali (formazione di neve e ghiaccio).
+     */
     private void startWinterEffects() {
-        plugin.getLogger().info("È arrivato l'Inverno! Il mondo inizierà a ghiacciare...");
         startSeasonalEffectTask(100L, this::applyWinterToChunk);
     }
 
+    /**
+     * Avvia il task per gli effetti primaverili (scioglimento di neve e ghiaccio).
+     */
     private void startSpringEffects() {
-        plugin.getLogger().info("È arrivata la Primavera! La neve si scioglie...");
         startSeasonalEffectTask(80L, this::applySpringToChunk);
     }
 
+    /**
+     * Avvia il task per gli effetti autunnali (attualmente nessuno).
+     */
     private void startAutumnEffects() {
-        plugin.getLogger().info("È arrivato l'Autunno! La resource pack stagionale è stata inviata ai giocatori.");
+        // Attualmente non sono previste azioni periodiche per l'autunno.
     }
 
     /**
-     * Applica l'effetto di congelamento invernale in un punto casuale di un chunk,
-     * con una probabilità aumentata se ci sono già blocchi di neve o ghiaccio nelle vicinanze.
-     * @param chunk Il chunk in cui applicare l'effetto.
+     * Applica la logica di congelamento a un blocco casuale all'interno di un chunk.
+     * Trasforma l'acqua in ghiaccio o deposita neve sui blocchi solidi.
+     * La probabilità aumenta se ci sono già blocchi freddi nelle vicinanze.
+     *
+     * @param chunk Il chunk su cui applicare l'effetto.
      */
     private void applyWinterToChunk(Chunk chunk) {
         int x = chunk.getX() * 16 + random.nextInt(16);
@@ -193,22 +248,20 @@ public class SeasonalEffectsManager implements Listener {
                 Material blockType = highestBlock.getType();
                 if (blockType == Material.WATER) {
                     highestBlock.setType(Material.ICE);
-                    logNaturalChange("Blocco congelato", highestBlock.getLocation());
+                    logNaturalChange("seasonal-effects.actions.frozen", highestBlock.getLocation());
                 } else if (blockType == Material.AIR && blockBelow.getType().isSolid() && blockBelow.getType() != Material.ICE) {
                     highestBlock.setType(Material.SNOW);
-                    logNaturalChange("Neve formata", highestBlock.getLocation());
+                    logNaturalChange("seasonal-effects.actions.snow-formed", highestBlock.getLocation());
                 }
             });
         }
     }
 
-    private boolean isColdBlock(Material material) {
-        return material == Material.ICE || material == Material.SNOW || material == Material.SNOW_BLOCK;
-    }
-
     /**
-     * Applica l'effetto di scioglimento primaverile in un punto casuale di un chunk.
-     * @param chunk Il chunk in cui applicare l'effetto.
+     * Applica la logica di scioglimento a un blocco casuale all'interno di un chunk.
+     * Rimuove la neve o trasforma il ghiaccio in acqua. Può anche far nascere fiori.
+     *
+     * @param chunk Il chunk su cui applicare l'effetto.
      */
     private void applySpringToChunk(Chunk chunk) {
         int thawChance = plugin.getConfig().getInt("visual-effects.primavera.thaw-chance", 35);
@@ -221,35 +274,47 @@ public class SeasonalEffectsManager implements Listener {
             Bukkit.getScheduler().runTask(plugin, () -> {
                 if (blockType == Material.SNOW) {
                     highestBlock.setType(Material.AIR);
-                    logNaturalChange("Neve sciolta", highestBlock.getLocation());
+                    logNaturalChange("seasonal-effects.actions.snow-melted", highestBlock.getLocation());
                     int flowerChance = plugin.getConfig().getInt("visual-effects.primavera.flower-spawn-chance", 5);
                     if (highestBlock.getRelative(BlockFace.DOWN).getType() == Material.GRASS_BLOCK && random.nextInt(100) < flowerChance) {
                         highestBlock.setType(random.nextBoolean() ? Material.POPPY : Material.DANDELION);
                     }
                 } else if (blockType == Material.ICE) {
                     highestBlock.setType(Material.WATER);
-                    logNaturalChange("Ghiaccio sciolto", highestBlock.getLocation());
+                    logNaturalChange("seasonal-effects.actions.ice-melted", highestBlock.getLocation());
                 }
             });
         }
     }
 
     /**
-     * Metodo di utilità per loggare un cambiamento ambientale naturale nella console.
-     * Il messaggio di log viene inviato solo se 'debug-mode' è attivo nel config.
-     * @param action Descrizione del cambiamento (es. "Blocco congelato").
-     * @param location La posizione del blocco modificato.
+     * Metodo di utilità per verificare se un materiale è un "blocco freddo".
+     *
+     * @param material Il materiale da controllare.
+     * @return true se il materiale è ghiaccio o neve, altrimenti false.
      */
-    private void logNaturalChange(String action, Location location) {
-        // Esegue il codice di debug solo se la modalità è attiva.
+    private boolean isColdBlock(Material material) {
+        return material == Material.ICE || material == Material.SNOW || material == Material.SNOW_BLOCK;
+    }
+
+    /**
+     * Registra un messaggio di debug per una modifica ambientale avvenuta naturalmente
+     * a causa degli effetti stagionali del plugin.
+     *
+     * @param actionKey La chiave di traduzione per l'azione eseguita (es. "Congelato").
+     * @param location  La posizione in cui è avvenuta la modifica.
+     */
+    private void logNaturalChange(String actionKey, Location location) {
         if (plugin.isDebugMode()) {
-            plugin.getLogger().info(String.format(
-                    "[DEBUG] %s nel mondo %s alle coordinate X:%.0f Y:%.0f Z:%.0f",
-                    action,
-                    location.getWorld().getName(),
-                    location.getX(),
-                    location.getY(),
-                    location.getZ()
+            LanguageManager lang = plugin.getLanguageManager();
+            String action = lang.getString(actionKey);
+
+            plugin.getLogger().info(lang.getString("seasonal-effects.debug-log-natural",
+                    "{action}", action,
+                    "{worldName}", location.getWorld().getName(),
+                    "{x}", String.format("%.0f", location.getX()),
+                    "{y}", String.format("%.0f", location.getY()),
+                    "{z}", String.format("%.0f", location.getZ())
             ));
         }
     }

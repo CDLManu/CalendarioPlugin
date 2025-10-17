@@ -1,0 +1,74 @@
+# English Language File for CalendarioPlugin
+# Placeholders like {placeholder} will be replaced by the plugin.
+
+# --- General Command Messages ---
+commands:
+  no-permission: "&cYou must be an operator to use this command."
+  reload-success: "&aCalendarioPlugin reloaded successfully! Changes have been applied."
+  date-updated: "&aDate updated. All seasonal systems have been recalibrated."
+  invalid-value-number: "&cThe value must be a number."
+  invalid-value-day: "&cInvalid value for day. For the current month, it must be between 1 and {maxDays}."
+  invalid-value-month: "&cInvalid value for month. It must be between 1 and 12."
+  invalid-value-year: "&cInvalid value for year. It must be 1 or higher."
+  # --- Event Command Messages ---
+  event-usage: "&cUsage: /calendario event <start|end|status> [event_id]"
+  event-start-usage: "&cUsage: /calendario event start <event_id>"
+  event-started: "&aEvent '{eventName}' force started."
+  event-not-found: "&cEvent '{eventName}' not found in events.yml."
+  event-ended: "&eActive event force ended."
+  event-none-active: "&cThere is no active event to end."
+  event-status-active: "&aActive event: {eventName}"
+  event-status-none: "&eNo event is currently active."
+
+# --- Boss Bar Texts ---
+bossbar:
+  weather-storm: "&3Storm"
+  weather-rain: "&9Rain"
+  weather-clear: "&bClear"
+
+# --- Time and Date Texts ---
+time:
+  invalid-month: "Invalid Month"
+
+months:
+  1: "January"
+  2: "February"
+  3: "March"
+  4: "April"
+  5: "May"
+  6: "June"
+  7: "July"
+  8: "August"
+  9: "September"
+  10: "October"
+  11: "November"
+  12: "December"
+
+# --- CORREZIONE: Chiavi allineate all'enum Java ---
+seasons:
+  INVERNO: "&bWinter"
+  PRIMAVERA: "&aSpring"
+  ESTATE: "&eSummer"
+  AUTUNNO: "&6Autumn"
+
+# --- Event Related Messages ---
+events:
+  new-day: "&aIt's a new day! Date: &f{date}"
+  event-started-log: "Event started: {eventName}"
+  event-ended-log: "Event ended: {eventName}"
+  date-change-end: "Manual date change: event '{eventName}' is being force ended."
+
+# --- Seasonal Effects Messages ---
+seasonal-effects:
+  winter-arrival: "Winter has arrived! The world will begin to freeze..."
+  spring-arrival: "Spring has arrived! The snow is melting..."
+  autumn-arrival: "Autumn has arrived! The seasonal resource pack has been sent to players."
+  # --- Debug Log Messages (only shown if debug-mode is true) ---
+  debug-log-player: "[DEBUG] Player {playerName} placed {blockType} in world {worldName} at X:{x} Y:{y} Z:{z}"
+  debug-log-natural: "[DEBUG] {action} in world {worldName} at X:{x} Y:{y} Z:{z}"
+  # --- Actions for Natural Debug Log ---
+  actions:
+    frozen: "Frozen block"
+    snow-formed: "Snow formed"
+    snow-melted: "Snow melted"
+    ice-melted: "Ice melted"

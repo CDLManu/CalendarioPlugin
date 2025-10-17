@@ -1,0 +1,76 @@
+# File di Lingua Italiano per CalendarioPlugin
+# I segnaposto come {placeholder} verranno sostituiti dal plugin.
+
+# --- Messaggi Generali dei Comandi ---
+commands:
+  no-permission: "&cDevi essere un operatore per usare questo comando."
+  reload-success: "&aCalendarioPlugin ricaricato con successo! Le modifiche sono state applicate."
+  date-updated: "&aData aggiornata. Tutti i sistemi stagionali sono stati ricalibrati."
+  invalid-value-number: "&cIl valore deve essere un numero."
+  invalid-value-day: "&cValore per il giorno non valido. Per questo mese, deve essere tra 1 e {maxDays}."
+  invalid-value-month: "&cValore per il mese non valido. Deve essere tra 1 e 12."
+  invalid-value-year: "&cValore per l'anno non valido. Deve essere 1 o superiore."
+
+  # --- Messaggi dei Comandi Evento ---
+  event-usage: "&cUso: /calendario evento <start|end|status> [id_evento]"
+  event-start-usage: "&cUso: /calendario evento start <id_evento>"
+  event-started: "&aEvento '{eventName}' avviato forzatamente."
+  event-not-found: "&cEvento '{eventName}' non trovato in events.yml."
+  event-ended: "&eEvento attivo terminato forzatamente."
+  event-none-active: "&cNon c'è nessun evento attivo da terminare."
+  event-status-active: "&aEvento attivo: {eventName}"
+  event-status-none: "&eNessun evento attivo al momento."
+
+# --- Testi della Boss Bar ---
+bossbar:
+  weather-storm: "&3Tempesta"
+  weather-rain: "&9Pioggia"
+  weather-clear: "&bSereno"
+
+# --- Testi per Tempo e Data ---
+time:
+  invalid-month: "Mese Non Valido"
+
+months:
+  1: "Gennaio"
+  2: "Febbraio"
+  3: "Marzo"
+  4: "Aprile"
+  5: "Maggio"
+  6: "Giugno"
+  7: "Luglio"
+  8: "Agosto"
+  9: "Settembre"
+  10: "Ottobre"
+  11: "Novembre"
+  12: "Dicembre"
+
+seasons:
+  INVERNO: "&bInverno"
+  PRIMAVERA: "&aPrimavera"
+  ESTATE: "&eEstate"
+  AUTUNNO: "&6Autunno"
+
+# --- Messaggi Relativi agli Eventi ---
+events:
+  new-day: "&aÈ un nuovo giorno! Data: &f{date}"
+  event-started-log: "Evento iniziato: {eventName}"
+  event-ended-log: "Evento terminato: {eventName}"
+  date-change-end: "Cambio data manuale: l'evento '{eventName}' viene terminato forzatamente."
+
+# --- Messaggi degli Effetti Stagionali ---
+seasonal-effects:
+  winter-arrival: "È arrivato l'Inverno! Il mondo inizierà a ghiacciare..."
+  spring-arrival: "È arrivata la Primavera! La neve si scioglie..."
+  autumn-arrival: "È arrivato l'Autunno! La resource pack stagionale è stata inviata ai giocatori."
+
+  # --- Messaggi di Log per il Debug (mostrati solo se debug-mode è true) ---
+  debug-log-player: "[DEBUG] Il giocatore {playerName} ha piazzato {blockType} nel mondo {worldName} alle coordinate X:{x} Y:{y} Z:{z}"
+  debug-log-natural: "[DEBUG] {action} nel mondo {worldName} alle coordinate X:{x} Y:{y} Z:{z}"
+
+  # --- Azioni per il Log di Debug Naturale ---
+  actions:
+    frozen: "Blocco congelato"
+    snow-formed: "Neve formata"
+    snow-melted: "Neve sciolta"
+    ice-melted: "Ghiaccio sciolto"
