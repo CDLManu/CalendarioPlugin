@@ -1,5 +1,5 @@
 name: CalendarioPlugin
-version: 1.8 # Ti consiglio di aumentare la versione
+version: 1.8
 main: it.cdl.calendario.CalendarioPlugin
 api-version: '1.21'
 author: ManuX
