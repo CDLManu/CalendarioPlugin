@@ -7,7 +7,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
-
 /**
  * Classe principale del plugin CalendarioPlugin.
  * Gestisce il ciclo di vita del plugin (abilitazione, disabilitazione, ricaricamento),
@@ -25,7 +24,6 @@ public final class CalendarioPlugin extends JavaPlugin {
     private CalendarTask mainTaskInstance;
 
     private boolean debugMode;
-
     /**
      * Metodo chiamato all'avvio del server o al caricamento del plugin.
      * Si occupa di inizializzare la configurazione, i file di lingua e tutti
@@ -37,6 +35,8 @@ public final class CalendarioPlugin extends JavaPlugin {
         setupDefaultFiles();
 
         // 2. Caricamento della configurazione e inizializzazione dei manager.
+        // Salva le nuove sezioni di config se non esistono
+        this.saveDefaultConfig();
         this.reloadConfig();
         this.debugMode = getConfig().getBoolean("debug-mode", false);
         this.languageManager = new LanguageManager(this);
@@ -48,9 +48,9 @@ public final class CalendarioPlugin extends JavaPlugin {
         // 4. Integrazione con API esterne (PlaceholderAPI).
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new CalendarioExpansion(this).register();
-            getLogger().info("PlaceholderAPI trovato! I segnaposto sono stati abilitati.");
+            getLogger().info(languageManager.getString("logs.papi-found"));
         } else {
-            getLogger().warning("PlaceholderAPI non trovato. I segnaposto non saranno disponibili.");
+            getLogger().warning(languageManager.getString("logs.papi-not-found"));
         }
 
         getLogger().info("CalendarioPlugin è stato abilitato con successo!");
@@ -63,7 +63,8 @@ public final class CalendarioPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         if (timeManager != null) {
-            timeManager.saveData(); // Salva la data in data.yml
+            timeManager.saveData();
+            // Salva la data in data.yml
         }
         shutdownPluginSystems();
         getLogger().info("CalendarioPlugin è stato disabilitato.");
@@ -77,7 +78,7 @@ public final class CalendarioPlugin extends JavaPlugin {
      * vengano persi durante il processo.
      */
     public void reload() {
-        getLogger().info("Ricaricamento del plugin in corso...");
+        getLogger().info(languageManager.getString("logs.plugin-reloading"));
 
         // --- CORREZIONE DEFINITIVA ---
         // 1. Salva i dati correnti (la data) nel file data.yml PRIMA di fare qualsiasi altra cosa.
@@ -102,12 +103,12 @@ public final class CalendarioPlugin extends JavaPlugin {
         startupPluginSystems();
 
         // 6. Forza l'aggiornamento dei sistemi per applicare subito le nuove impostazioni
-        //    lette dal config.yml (es. nuova velocità del tempo).
+        //    lette dal config.yml (es. Nuova velocità del tempo).
         if (mainTaskInstance != null) {
             mainTaskInstance.forceUpdate();
         }
 
-        getLogger().info("Plugin ricaricato con successo.");
+        getLogger().info(languageManager.getString("logs.plugin-reloaded"));
     }
 
     /**
@@ -116,7 +117,8 @@ public final class CalendarioPlugin extends JavaPlugin {
      * Imposta la gamerule per prendere il controllo del ciclo giorno/notte.
      */
     public void startupPluginSystems() {
-        this.timeManager = new TimeManager(this); // Caricherà i dati da data.yml
+        this.timeManager = new TimeManager(this);
+        // Caricherà i dati da data.yml
         this.bossBarManager = new BossBarManager(this);
         this.seasonalEffectsManager = new SeasonalEffectsManager(this);
         this.eventManager = new EventManager(this);
@@ -125,11 +127,12 @@ public final class CalendarioPlugin extends JavaPlugin {
         for (World world : this.getServer().getWorlds()) {
             world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
         }
-        getLogger().info("Game rule 'doDaylightCycle' impostata su 'false'. Il tempo è gestito dal plugin.");
+        getLogger().info(languageManager.getString("logs.gamerule-set"));
 
         // Avvia il task principale che gestisce il tempo.
         this.mainTaskInstance = new CalendarTask(this);
-        this.mainTaskInstance.runTaskTimer(this, 0L, 20L); // Eseguito ogni secondo
+        this.mainTaskInstance.runTaskTimer(this, 0L, 20L);
+        // Eseguito ogni secondo
 
         // Aggiunge i giocatori online alla BossBar e applica effetti stagionali.
         for (Player player : this.getServer().getOnlinePlayers()) {
@@ -156,7 +159,7 @@ public final class CalendarioPlugin extends JavaPlugin {
         for (World world : this.getServer().getWorlds()) {
             world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, true);
         }
-        getLogger().info("Sistemi del plugin arrestati. Game rule 'doDaylightCycle' ripristinata.");
+        getLogger().info(languageManager.getString("logs.gamerule-restored"));
     }
 
     /**
@@ -174,7 +177,7 @@ public final class CalendarioPlugin extends JavaPlugin {
             calendarCommand.setExecutor(executorAndCompleter);
             calendarCommand.setTabCompleter(executorAndCompleter);
         } else {
-            getLogger().severe("Comando 'calendario' non trovato! Controlla plugin.yml");
+            getLogger().severe(languageManager.getString("logs.command-not-found"));
         }
     }
 
@@ -185,7 +188,6 @@ public final class CalendarioPlugin extends JavaPlugin {
     private void setupDefaultFiles() {
         saveDefaultConfig();
         saveResource("events.yml", false);
-
         File langFolder = new File(getDataFolder(), "lang");
         if (!langFolder.exists()) {
             if (!langFolder.mkdirs()) {
@@ -198,11 +200,15 @@ public final class CalendarioPlugin extends JavaPlugin {
 
     // --- Metodi Getter per l'accesso ai componenti del plugin ---
 
-    public TimeManager getTimeManager() { return timeManager; }
+    public TimeManager getTimeManager() { return timeManager;
+    }
     public BossBarManager getBossBarManager() { return bossBarManager; }
-    public SeasonalEffectsManager getSeasonalEffectsManager() { return seasonalEffectsManager; }
+    public SeasonalEffectsManager getSeasonalEffectsManager() { return seasonalEffectsManager;
+    }
     public EventManager getEventManager() { return eventManager; }
-    public LanguageManager getLanguageManager() { return languageManager; }
+    public LanguageManager getLanguageManager() { return languageManager;
+    }
     public CalendarTask getMainTaskInstance() { return mainTaskInstance; }
-    public boolean isDebugMode() { return this.debugMode; }
+    public boolean isDebugMode() { return this.debugMode;
+    }
 }

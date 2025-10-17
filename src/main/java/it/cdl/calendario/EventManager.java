@@ -68,15 +68,20 @@ public class EventManager {
                     eventData.getString("display-name", "Nameless Event"),
                     eventData.getString("type", "RANDOM").toUpperCase(),
                     eventData.getString("trigger-date", ""),
+
                     eventData.getInt("conditions.chance", 0),
                     new HashSet<>(eventData.getStringList("conditions.seasons")),
                     eventData.getInt("duration-days", 1),
                     eventData.getStringList("start-commands"),
                     eventData.getStringList("end-commands")
+
             );
             loadedEvents.put(eventId.toLowerCase(), event);
         }
-        plugin.getLogger().info("Caricati " + loadedEvents.size() + " eventi personalizzati da events.yml.");
+        // MODIFICA: Usa il LanguageManager per il log
+        plugin.getLogger().info(plugin.getLanguageManager().getString(
+                "logs.events-loaded", "{count}", String.valueOf(loadedEvents.size())
+        ));
     }
 
     /**
@@ -160,7 +165,7 @@ public class EventManager {
      *
      * @param event L'evento da avviare.
      */
-    private void startEvent(CustomEvent event) {
+    public void startEvent(CustomEvent event) {
         this.activeEvent = event;
         this.daysRemaining = event.durationDays();
 
@@ -175,7 +180,6 @@ public class EventManager {
      */
     public void endActiveEvent() {
         if (activeEvent == null) return;
-
         String displayName = activeEvent.displayName().replace('&', '§');
         plugin.getLogger().info(plugin.getLanguageManager().getString("events.event-ended-log", "{eventName}", displayName));
 
@@ -196,4 +200,20 @@ public class EventManager {
         }
     }
 
+    /**
+     * Restituisce l'evento attualmente attivo.
+     * @return Il CustomEvent attivo, o null se non c'è nessun evento in corso.
+     */
+    public CustomEvent getActiveEvent() {
+        return activeEvent;
+    }
+
+    /**
+     * Cerca un evento caricato tramite il suo ID.
+     * @param eventId L'ID (chiave) dell'evento (es. "halloween")
+     * @return Il CustomEvent, o null se non trovato.
+     */
+    public CustomEvent getEventById(String eventId) {
+        return loadedEvents.get(eventId.toLowerCase());
+    }
 }

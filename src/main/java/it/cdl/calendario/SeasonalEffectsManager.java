@@ -16,6 +16,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -31,13 +32,11 @@ public class SeasonalEffectsManager implements Listener {
 
     private final CalendarioPlugin plugin;
     private final Random random = new Random();
-
     /**
      * Riferimento al task Bukkit attualmente attivo per gli effetti stagionali.
      * Viene mantenuto per poterlo annullare al cambio di stagione.
      */
     private BukkitTask activeEffectTask = null;
-
     /**
      * Insieme di materiali il cui piazzamento viene tracciato in modalità debug.
      */
@@ -46,22 +45,76 @@ public class SeasonalEffectsManager implements Listener {
     );
 
     /**
-     * Insieme di biomi considerati "temperati", dove gli effetti di gelo e disgelo
-     * stagionale verranno applicati. Esclude biomi già freddi o troppo caldi.
+     * Insieme di biomi considerati "temperati", letto dal config.yml,
+     * dove gli effetti di gelo e disgelo stagionale verranno applicati.
      */
-    private static final Set<Biome> MILD_BIOMES = Set.of(
-            Biome.PLAINS, Biome.FOREST, Biome.BIRCH_FOREST, Biome.DARK_FOREST,
-            Biome.TAIGA, Biome.MEADOW, Biome.SWAMP, Biome.RIVER, Biome.BEACH
-    );
+    private final Set<Biome> mildBiomes;
+
+    /**
+     * Lista di fiori che possono nascere in primavera, letta dal config.yml.
+     */
+    private final List<Material> spawnableFlowers;
+
 
     /**
      * Costruttore del manager degli effetti stagionali.
-     *
+     * Carica le impostazioni (biomi, fiori) dal config.yml.
      * @param plugin L'istanza principale del plugin.
      */
     public SeasonalEffectsManager(CalendarioPlugin plugin) {
         this.plugin = plugin;
+
+        // Carica i biomi temperati dal config
+        this.mildBiomes = loadBiomesFromConfig();
+
+        // Carica i fiori primaverili dal config
+        this.spawnableFlowers = loadMaterialsFromConfig();
+        if (spawnableFlowers.isEmpty()) {
+            // Fallback se la lista è vuota o non valida, per evitare errori
+            spawnableFlowers.add(Material.POPPY);
+            spawnableFlowers.add(Material.DANDELION);
+        }
     }
+
+    /**
+     * Metodo helper per caricare una lista di Biomi dal config.
+     */
+    private Set<Biome> loadBiomesFromConfig() {
+        List<String> biomeNames = plugin.getConfig().getStringList("visual-effects.mild-biomes");
+        Set<Biome> biomes = EnumSet.noneOf(Biome.class);
+
+        for (String name : biomeNames) {
+            try {
+                biomes.add(Biome.valueOf(name.toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                plugin.getLogger().warning(
+                        plugin.getLanguageManager().getString("logs.invalid-config-biome", "{biome}", name)
+                );
+            }
+        }
+        return biomes;
+    }
+
+    /**
+     * Metodo helper per caricare una lista di Materiali dal config.
+     */
+    private List<Material> loadMaterialsFromConfig() {
+        List<String> materialNames = plugin.getConfig().getStringList("visual-effects.primavera.spawnable-flowers");
+        List<Material> materials = new ArrayList<>();
+
+        for (String name : materialNames) {
+            Material mat = Material.matchMaterial(name.toUpperCase());
+            if (mat != null && mat.isItem()) { // Assicura che sia un blocco/fiore piazzabile
+                materials.add(mat);
+            } else {
+                plugin.getLogger().warning(
+                        plugin.getLanguageManager().getString("logs.invalid-config-material", "{material}", name)
+                );
+            }
+        }
+        return materials;
+    }
+
 
     /**
      * Intercetta il piazzamento di blocchi da parte dei giocatori.
@@ -81,6 +134,7 @@ public class SeasonalEffectsManager implements Listener {
                         "{playerName}", player.getName(),
                         "{blockType}", block.getType().name(),
                         "{worldName}", loc.getWorld().getName(),
+
                         "{x}", String.format("%.0f", loc.getX()),
                         "{y}", String.format("%.0f", loc.getY()),
                         "{z}", String.format("%.0f", loc.getZ())
@@ -135,10 +189,8 @@ public class SeasonalEffectsManager implements Listener {
             case AUTUNNO -> "autunno";
             default -> "primavera";
         };
-
         String url = plugin.getConfig().getString("resource-packs." + seasonConfigKey + ".url", "");
         String sha1 = plugin.getConfig().getString("resource-packs." + seasonConfigKey + ".sha1", "");
-
         if (url.isEmpty() || sha1.isEmpty()) {
             plugin.getLogger().info("Nessun resource pack trovato per " + seasonConfigKey + ", usando il default (Primavera)...");
             url = plugin.getConfig().getString("resource-packs.primavera.url", "");
@@ -185,7 +237,6 @@ public class SeasonalEffectsManager implements Listener {
 
                 Player randomPlayer = players.get(random.nextInt(players.size()));
                 Chunk chunk = randomPlayer.getLocation().getChunk();
-
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                     for (int i = 0; i < 5; i++) {
                         chunkEffect.accept(chunk);
@@ -229,7 +280,8 @@ public class SeasonalEffectsManager implements Listener {
         World world = chunk.getWorld();
         Block highestBlock = world.getHighestBlockAt(x, z);
 
-        if (!MILD_BIOMES.contains(highestBlock.getBiome())) return;
+        // MODIFICA: Controlla contro la lista caricata dal config
+        if (!this.mildBiomes.contains(highestBlock.getBiome())) return;
 
         int baseChance = plugin.getConfig().getInt("visual-effects.inverno.freeze-chance", 30);
         int spreadBonusPerBlock = 15;
@@ -242,13 +294,13 @@ public class SeasonalEffectsManager implements Listener {
         if (isColdBlock(blockBelow.getRelative(BlockFace.WEST).getType())) surroundingIce++;
 
         int finalChance = baseChance + (surroundingIce * spreadBonusPerBlock);
-
         if (random.nextInt(100) < finalChance) {
             Bukkit.getScheduler().runTask(plugin, () -> {
                 Material blockType = highestBlock.getType();
                 if (blockType == Material.WATER) {
                     highestBlock.setType(Material.ICE);
                     logNaturalChange("seasonal-effects.actions.frozen", highestBlock.getLocation());
+
                 } else if (blockType == Material.AIR && blockBelow.getType().isSolid() && blockBelow.getType() != Material.ICE) {
                     highestBlock.setType(Material.SNOW);
                     logNaturalChange("seasonal-effects.actions.snow-formed", highestBlock.getLocation());
@@ -276,10 +328,17 @@ public class SeasonalEffectsManager implements Listener {
                     highestBlock.setType(Material.AIR);
                     logNaturalChange("seasonal-effects.actions.snow-melted", highestBlock.getLocation());
                     int flowerChance = plugin.getConfig().getInt("visual-effects.primavera.flower-spawn-chance", 5);
-                    if (highestBlock.getRelative(BlockFace.DOWN).getType() == Material.GRASS_BLOCK && random.nextInt(100) < flowerChance) {
-                        highestBlock.setType(random.nextBoolean() ? Material.POPPY : Material.DANDELION);
+
+                    // MODIFICA: Sceglie un fiore casuale dalla lista caricata dal config
+                    if (highestBlock.getRelative(BlockFace.DOWN).getType() == Material.GRASS_BLOCK &&
+                            random.nextInt(100) < flowerChance &&
+                            !spawnableFlowers.isEmpty()) {
+
+                        Material flowerToSpawn = spawnableFlowers.get(random.nextInt(spawnableFlowers.size()));
+                        highestBlock.setType(flowerToSpawn);
                     }
                 } else if (blockType == Material.ICE) {
+
                     highestBlock.setType(Material.WATER);
                     logNaturalChange("seasonal-effects.actions.ice-melted", highestBlock.getLocation());
                 }
@@ -294,7 +353,8 @@ public class SeasonalEffectsManager implements Listener {
      * @return true se il materiale è ghiaccio o neve, altrimenti false.
      */
     private boolean isColdBlock(Material material) {
-        return material == Material.ICE || material == Material.SNOW || material == Material.SNOW_BLOCK;
+        return material == Material.ICE ||
+                material == Material.SNOW || material == Material.SNOW_BLOCK;
     }
 
     /**
@@ -314,6 +374,7 @@ public class SeasonalEffectsManager implements Listener {
                     "{worldName}", location.getWorld().getName(),
                     "{x}", String.format("%.0f", location.getX()),
                     "{y}", String.format("%.0f", location.getY()),
+
                     "{z}", String.format("%.0f", location.getZ())
             ));
         }

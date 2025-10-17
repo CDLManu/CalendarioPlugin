@@ -13,7 +13,8 @@ import org.jetbrains.annotations.Nullable;
  */
 public class CalendarioExpansion extends PlaceholderExpansion {
 
-    /** Un riferimento all'istanza principale del plugin per accedere ai suoi dati. */
+    /** Un riferimento all'istanza principale del plugin per accedere ai suoi dati.
+     */
     private final CalendarioPlugin plugin;
 
     /**
@@ -77,7 +78,8 @@ public class CalendarioExpansion extends PlaceholderExpansion {
         TimeManager timeManager = plugin.getTimeManager();
         if (timeManager == null) {
             // Se il TimeManager non è ancora pronto, restituisce un messaggio di errore.
-            return "Errore";
+            // MODIFICA: Usa il LanguageManager per il messaggio di errore
+            return plugin.getLanguageManager().getString("errors.placeholder-api-fail");
         }
 
         // Utilizza uno switch per gestire in modo efficiente i diversi placeholder richiesti.

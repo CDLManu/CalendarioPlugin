@@ -26,22 +26,31 @@ public class CalendarCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length == 0) {
-            // TODO: Mostra un messaggio di aiuto
+            // Mostra il messaggio di aiuto se non vengono forniti argomenti
+            sendHelpMessage(sender);
             return true;
         }
 
         String subCommand = args[0].toLowerCase();
-
         switch (subCommand) {
+            case "help" -> sendHelpMessage(sender);
             case "reload" -> handleReload(sender);
             case "set" -> handleSet(sender, args);
-            case "event" -> handleEvent();
+            case "event" -> handleEvent(sender, args); // Passa sender e args
             default -> {
-                // TODO: Messaggio di comando non valido
+                // Messaggio di comando non valido
+                sender.sendMessage(lang.getString("commands.invalid-subcommand"));
                 return true;
             }
         }
         return true;
+    }
+
+    private void sendHelpMessage(CommandSender sender) {
+        sender.sendMessage(lang.getString("commands.help-header"));
+        sender.sendMessage(lang.getString("commands.help-set"));
+        sender.sendMessage(lang.getString("commands.help-reload"));
+        sender.sendMessage(lang.getString("commands.help-event"));
     }
 
     private void handleReload(CommandSender sender) {
@@ -59,7 +68,8 @@ public class CalendarCommand implements CommandExecutor, TabCompleter {
             return;
         }
         if (args.length < 3) {
-            // TODO: Messaggio di uso corretto /calendario set <giorno|mese|anno> <valore>
+            // Messaggio di uso corretto
+            sender.sendMessage(lang.getString("commands.set-usage"));
             return;
         }
 
@@ -96,7 +106,8 @@ public class CalendarCommand implements CommandExecutor, TabCompleter {
                 tm.setAnno(value);
             }
             default -> {
-                // TODO: Messaggio di uso corretto
+                // Messaggio di uso corretto
+                sender.sendMessage(lang.getString("commands.set-usage"));
                 return;
             }
         }
@@ -106,8 +117,60 @@ public class CalendarCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(lang.getString("commands.date-updated"));
     }
 
-    private void handleEvent() {
-        // Implementazione della logica per gestire gli eventi
+    private void handleEvent(CommandSender sender, String[] args) {
+        if (!sender.isOp()) {
+            sender.sendMessage(lang.getString("commands.no-permission"));
+            return;
+        }
+
+        if (args.length < 2) {
+            sender.sendMessage(lang.getString("commands.event-usage"));
+            return;
+        }
+
+        String action = args[1].toLowerCase();
+        EventManager em = plugin.getEventManager();
+
+        switch (action) {
+            case "start" -> {
+                if (args.length < 3) {
+                    sender.sendMessage(lang.getString("commands.event-start-usage"));
+                    return;
+                }
+                String eventIdToStart = args[2].toLowerCase();
+                CustomEvent event = em.getEventById(eventIdToStart); // Metodo da aggiungere a EventManager
+
+                if (event == null) {
+                    sender.sendMessage(lang.getString("commands.event-not-found", "{eventName}", eventIdToStart));
+                    return;
+                }
+
+                // Termina l'evento corrente prima di avviarne uno nuovo
+                if (em.getActiveEvent() != null) { // Metodo da aggiungere
+                    em.endActiveEvent();
+                }
+
+                em.startEvent(event); // Metodo da rendere public
+                sender.sendMessage(lang.getString("commands.event-started", "{eventName}", event.displayName()));
+            }
+            case "end" -> {
+                if (em.getActiveEvent() == null) { // Metodo da aggiungere
+                    sender.sendMessage(lang.getString("commands.event-none-active"));
+                    return;
+                }
+                em.endActiveEvent();
+                sender.sendMessage(lang.getString("commands.event-ended"));
+            }
+            case "status" -> {
+                CustomEvent activeEvent = em.getActiveEvent(); // Metodo da aggiungere
+                if (activeEvent == null) {
+                    sender.sendMessage(lang.getString("commands.event-status-none"));
+                } else {
+                    sender.sendMessage(lang.getString("commands.event-status-active", "{eventName}", activeEvent.displayName()));
+                }
+            }
+            default -> sender.sendMessage(lang.getString("commands.event-usage"));
+        }
     }
 
 
@@ -116,11 +179,17 @@ public class CalendarCommand implements CommandExecutor, TabCompleter {
         if (!sender.isOp()) return null;
 
         if (args.length == 1) {
-            return List.of("set", "reload", "event");
+            // Aggiunto "help"
+            return List.of("set", "reload", "event", "help");
         }
 
         if (args.length == 2 && args[0].equalsIgnoreCase("set")) {
             return List.of("giorno", "mese", "anno");
+        }
+
+        if (args.length == 2 && args[0].equalsIgnoreCase("event")) {
+            // Aggiunti i sottocomandi di "event"
+            return List.of("start", "end", "status");
         }
 
         return new ArrayList<>();

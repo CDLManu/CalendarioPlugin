@@ -76,6 +76,24 @@ seasonal-farming:
   # Probability (from 0.0 to 1.0) that an out-of-season plant can grow.
   # 0.25 = 25% chance. 0.0 = growth is completely blocked.
   out-of-season-growth-chance: 0.25
+  # Definisce quali piante possono crescere in quali stagioni.
+  # Le piante non in lista useranno la "out-of-season-growth-chance". crops:
+  primavera:
+    - "WHEAT"
+    - "CARROTS"
+    - "POTATOES"
+    - "BEETROOTS"
+  estate:
+    - "MELON_STEM"
+    - "PUMPKIN_STEM"
+    - "SUGAR_CANE"
+    - "COCOA"
+  autunno:
+      - "WHEAT"
+      - "CARROTS"
+      - "POTATOES"
+  # L'inverno è vuoto, quindi (quasi) nulla cresce.
+  inverno: [ ]
 
 
 # --- BOSS BAR SETTINGS ---

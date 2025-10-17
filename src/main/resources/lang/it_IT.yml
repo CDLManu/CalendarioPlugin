@@ -20,6 +20,12 @@ commands:
   event-none-active: "&cNon c'è nessun evento attivo da terminare."
   event-status-active: "&aEvento attivo: {eventName}"
   event-status-none: "&eNessun evento attivo al momento."
+  invalid-subcommand: "&cComando non valido. Usa /calendario help per la lista dei comandi."
+  set-usage: "&cUso: /calendario set <giorno|mese|anno> <valore>"
+  help-header: "&e--- Aiuto CalendarioPlugin ---"
+  help-set: "&a/calendario set <giorno|mese|anno> <valore> &7- Imposta la data."
+  help-reload: "&a/calendario reload &7- Ricarica il plugin."
+  help-event: "&a/calendario event <start|end|status> [id] &7- Gestisce gli eventi."
 
 # --- Testi della Boss Bar ---
 bossbar:

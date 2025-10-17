@@ -9,7 +9,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
-
 /**
  * Gestisce tutti gli aspetti legati al tempo e al calendario del plugin.
  * Le sue responsabilità includono:
@@ -23,7 +22,6 @@ import java.util.logging.Level;
 public class TimeManager {
 
     private final CalendarioPlugin plugin;
-
     private int giornoCorrente;
     private int meseCorrente;
     private int annoCorrente;
@@ -80,22 +78,24 @@ public class TimeManager {
         return switch (mese) {
             // Mesi con 31 giorni
             case 1, 3, 5, 7, 8, 10, 12 -> 31;
-
             // Mesi con 30 giorni
             case 4, 6, 9, 11 -> 30;
-
             // Caso speciale: Febbraio
             case 2 -> {
                 // Un anno è bisestile se è divisibile per 4,
                 // tranne se è divisibile per 100 a meno che non sia anche divisibile per 400.
-                boolean isBisestile = (anno % 4 == 0 && anno % 100 != 0) || (anno % 400 == 0);
+                boolean isBisestile = (anno % 4 == 0 && anno
+                        % 100 != 0) || (anno % 400 == 0);
                 if (isBisestile) {
-                    yield 29; // Febbraio ha 29 giorni in un anno bisestile
+                    yield 29;
+                    // Febbraio ha 29 giorni in un anno bisestile
                 } else {
-                    yield 28; // Altrimenti ne ha 28
+                    yield 28;
+                    // Altrimenti ne ha 28
                 }
             }
-            default -> 30; // Fallback di sicurezza, non dovrebbe mai essere raggiunto
+            default -> 30;
+            // Fallback di sicurezza, non dovrebbe mai essere raggiunto
         };
     }
     /**
@@ -109,11 +109,9 @@ public class TimeManager {
         dataConfig.set("calendario.anno", this.annoCorrente);
         dataConfig.set("calendario.mese", this.meseCorrente);
         dataConfig.set("calendario.giorno", this.giornoCorrente);
-
         // Usa Optional per gestire in modo sicuro il caso in cui nessun mondo sia caricato.
         Bukkit.getWorlds().stream().findFirst()
                 .ifPresent(world -> dataConfig.set("calendario.total-ticks-salvati", world.getFullTime()));
-
         try {
             dataConfig.save(dataFile);
         } catch (IOException e) {
@@ -133,7 +131,6 @@ public class TimeManager {
             this.annoCorrente = plugin.getConfig().getInt("calendario.anno", 1);
             this.meseCorrente = plugin.getConfig().getInt("calendario.mese", 1);
             this.giornoCorrente = plugin.getConfig().getInt("calendario.giorno", 1);
-
             Bukkit.getWorlds().stream().findFirst().ifPresent(world -> {
                 long ticksSalvati = plugin.getConfig().getLong("calendario.total-ticks-salvati", 0L);
                 world.setFullTime(ticksSalvati);
@@ -172,14 +169,11 @@ public class TimeManager {
         LanguageManager lang = plugin.getLanguageManager();
         String dateString = this.giornoCorrente + " " + getNomeMese(this.meseCorrente) + " " + this.annoCorrente;
         String legacyMessage = lang.getString("events.new-day", "{date}", dateString);
-
         Component messageComponent = LegacyComponentSerializer.legacyAmpersand().deserialize(legacyMessage);
         Bukkit.broadcast(messageComponent);
     }
 
-    // I metodi setGiorno, setMese e setAnno sono stati rimossi perché non utilizzati.
-    // Le modifiche alla data avvengono tramite il comando /calendario set, che accede
-    // direttamente al TimeManager e salva i dati.
+    // MODIFICA: Commento obsoleto rimosso
 
     /**
      * Restituisce il giorno corrente.
@@ -212,7 +206,9 @@ public class TimeManager {
      * @return Il nome del mese o un messaggio di errore se invalido.
      */
     public String getNomeMese(int mese) {
-        return plugin.getLanguageManager().getString("months." + mese, "Mese Invalido");
+        // MODIFICA: Usa la chiave di lingua anche per il messaggio di fallback
+        String fallback = plugin.getLanguageManager().getString("errors.invalid-month");
+        return plugin.getLanguageManager().getString("months." + mese, fallback);
     }
 
     /**

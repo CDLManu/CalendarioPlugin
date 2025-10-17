@@ -5,6 +5,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockGrowEvent;
 
+import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -12,36 +14,53 @@ import java.util.Set;
  * Questo listener intercetta ogni tentativo di crescita delle piante e,
  * in base alla stagione corrente, può impedirne lo sviluppo.
  */
-@SuppressWarnings("ClassCanBeRecord")
 public final class CropGrowthListener implements Listener {
 
-    /** Un riferimento all'istanza principale del plugin per accedere ai suoi dati (config, TimeManager). */
     private final CalendarioPlugin plugin;
+
+    // --- Definizioni delle Piante Stagionali (lette dal config) ---
+    private final Set<Material> colturePrimaverili;
+    private final Set<Material> coltureEstive;
+    private final Set<Material> coltureAutunnali;
+    private final Set<Material> coltureInvernali;
+
 
     /**
      * Costruttore della classe.
+     * Carica le definizioni delle colture stagionali dal config.yml.
      * @param plugin L'istanza principale di CalendarioPlugin.
      */
     public CropGrowthListener(CalendarioPlugin plugin) {
         this.plugin = plugin;
+
+        // Carica le colture dal config.yml
+        this.colturePrimaverili = loadCropsFromConfig("seasonal-farming.crops.primavera");
+        this.coltureEstive = loadCropsFromConfig("seasonal-farming.crops.estate");
+        this.coltureAutunnali = loadCropsFromConfig("seasonal-farming.crops.autunno");
+        this.coltureInvernali = loadCropsFromConfig("seasonal-farming.crops.inverno");
     }
 
-    // --- Definizioni delle Piante Stagionali ---
-    // L'uso di Set garantisce ricerche estremamente veloci (complessità O(1)).
+    /**
+     * Metodo helper per caricare una lista di materiali dal config.
+     * @param configPath Il percorso nel config.yml (es. "seasonal-farming.crops.spring")
+     * @return Un Set di Materiali validi.
+     */
+    private Set<Material> loadCropsFromConfig(String configPath) {
+        List<String> cropNames = plugin.getConfig().getStringList(configPath);
+        Set<Material> materials = EnumSet.noneOf(Material.class);
 
-    /** Insieme delle piante che possono crescere in Primavera. */
-    private static final Set<Material> COLTURE_PRIMAVERILI = Set.of(
-            Material.WHEAT, Material.CARROTS, Material.POTATOES, Material.BEETROOTS
-    );
-    /** Insieme delle piante che possono crescere in Estate. */
-    private static final Set<Material> COLTURE_ESTIVE = Set.of(
-            Material.MELON_STEM, Material.PUMPKIN_STEM, Material.SUGAR_CANE, Material.COCOA
-    );
-    /** Insieme delle piante che possono crescere in Autunno. */
-    private static final Set<Material> COLTURE_AUTUNNALI = Set.of(
-            Material.WHEAT, Material.CARROTS, Material.POTATOES
-    );
-    //L'Inverno non ha un set definito, quindi nessuna pianta è considerata "di stagione".
+        for (String name : cropNames) {
+            Material mat = Material.matchMaterial(name.toUpperCase());
+            if (mat != null) {
+                materials.add(mat);
+            } else {
+                plugin.getLogger().warning(
+                        plugin.getLanguageManager().getString("logs.invalid-config-material", "{material}", name)
+                );
+            }
+        }
+        return materials;
+    }
 
     /**
      * Metodo chiamato da Bukkit ogni volta che un blocco tenta di crescere (es. Una pianta).
@@ -57,7 +76,8 @@ public final class CropGrowthListener implements Listener {
             // Se la pianta è fuori stagione, legge la probabilità di crescita dal file di configurazione.
             double chanceDiCrescere = plugin.getConfig().getDouble("seasonal-farming.out-of-season-growth-chance", 0.25);
 
-            // Genera un numero casuale tra 0.0 e 1.0. Se è maggiore della probabilità consentita,
+            // Genera un numero casuale tra 0.0 e 1.0.
+            // Se è maggiore della probabilità consentita,
             // la crescita viene annullata.
             if (Math.random() > chanceDiCrescere) {
                 event.setCancelled(true);
@@ -74,11 +94,11 @@ public final class CropGrowthListener implements Listener {
     private boolean isCropInSeason(Material cropType, TimeManager.Stagione stagione) {
         // Utilizza uno switch expression per restituire in modo conciso il risultato del controllo.
         return switch (stagione) {
-            case PRIMAVERA -> COLTURE_PRIMAVERILI.contains(cropType);
-            case ESTATE -> COLTURE_ESTIVE.contains(cropType);
-            case AUTUNNO -> COLTURE_AUTUNNALI.contains(cropType);
-            // Per le stagioni non elencate (es. INVERNO), restituisce sempre false.
-            default -> false;
+            case PRIMAVERA -> colturePrimaverili.contains(cropType);
+            case ESTATE -> coltureEstive.contains(cropType);
+            case AUTUNNO -> coltureAutunnali.contains(cropType);
+            case INVERNO -> coltureInvernali.contains(cropType);
+            // default non è necessario se tutti i casi Enum sono coperti
         };
     }
 }

@@ -1,6 +1,7 @@
 # English Language File for CalendarioPlugin
 # Placeholders like {placeholder} will be replaced by the plugin.
 
+
 # --- General Command Messages ---
 commands:
   no-permission: "&cYou must be an operator to use this command."
@@ -19,12 +20,23 @@ commands:
   event-none-active: "&cThere is no active event to end."
   event-status-active: "&aActive event: {eventName}"
   event-status-none: "&eNo event is currently active."
+  invalid-subcommand: "&cInvalid command. Use /calendar help for a list of commands."
+  set-usage: "&cUsage: /calendar set <day|month|year> <value>"
+  help-header: "&e--- CalendarPlugin Help ---"
+  help-set: "&a/calendar set <day|month|year> <value> &7- Sets the date."
+  help-reload: "&a/calendar reload &7- Reloads the plugin."
+  help-event: "&a/calendar event <start|end|status> [id] &7- Manages events."
 
 # --- Boss Bar Texts ---
 bossbar:
   weather-storm: "&3Storm"
   weather-rain: "&9Rain"
   weather-clear: "&bClear"
+
+errors:
+  placeholder-api-fail: "Calendar Error"
+  invalid-month: "Invalid Month"
+  missing-translation: "&cMissing translation for: {key}"
 
 # --- Time and Date Texts ---
 time:
@@ -63,6 +75,7 @@ seasonal-effects:
   winter-arrival: "Winter has arrived! The world will begin to freeze..."
   spring-arrival: "Spring has arrived! The snow is melting..."
   autumn-arrival: "Autumn has arrived! The seasonal resource pack has been sent to players."
+
   # --- Debug Log Messages (only shown if debug-mode is true) ---
   debug-log-player: "[DEBUG] Player {playerName} placed {blockType} in world {worldName} at X:{x} Y:{y} Z:{z}"
   debug-log-natural: "[DEBUG] {action} in world {worldName} at X:{x} Y:{y} Z:{z}"
@@ -72,3 +85,17 @@ seasonal-effects:
     snow-formed: "Snow formed"
     snow-melted: "Snow melted"
     ice-melted: "Ice melted"
+
+  # Aggiungi questa nuova sezione (ad esempio dopo 'seasonal-effects')
+logs:
+  # Messaggi mostrati solo nella console del server
+  plugin-reloading: "Reloading plugin..."
+  plugin-reloaded: "Plugin reloaded successfully."
+  papi-found: "PlaceholderAPI found! Placeholders have been enabled."
+  papi-not-found: "PlaceholderAPI not found. Placeholders will not be available."
+  gamerule-set: "Game rule 'doDaylightCycle' set to 'false'. Time is managed by the plugin."
+  gamerule-restored: "Plugin systems stopped. Game rule 'doDaylightCycle' restored."
+  command-not-found: "Command 'calendario' not found! Check plugin.yml"
+  events-loaded: "Loaded {count} custom events from events.yml."
+  invalid-config-material: "[CONFIG ERROR] Invalid material '{material}' in config.yml. Please check."
+  invalid-config-biome: "[CONFIG ERROR] Invalid biome '{biome}' in config.yml. Please check."
