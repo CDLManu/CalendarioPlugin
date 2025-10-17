@@ -78,7 +78,7 @@ public class EventManager {
             );
             loadedEvents.put(eventId.toLowerCase(), event);
         }
-        // MODIFICA: Usa il LanguageManager per il log
+
         plugin.getLogger().info(plugin.getLanguageManager().getString(
                 "logs.events-loaded", "{count}", String.valueOf(loadedEvents.size())
         ));
@@ -122,7 +122,7 @@ public class EventManager {
             plugin.getLogger().info(lang.getString("events.date-change-end", "{eventName}", activeEvent.displayName()));
             endActiveEvent();
         }
-        onNewDay(); // Simula un nuovo giorno per ricalibrare gli eventi
+        onNewDay();
     }
 
     /**

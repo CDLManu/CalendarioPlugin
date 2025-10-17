@@ -18,7 +18,7 @@ public class LanguageManager {
 
     private final CalendarioPlugin plugin;
     private FileConfiguration langConfig;
-    // MODIFICA: Fallback per le traduzioni mancanti, caricato dal file di lingua
+
     private String missingTranslationMessage;
 
     public LanguageManager(CalendarioPlugin plugin) {
@@ -41,11 +41,11 @@ public class LanguageManager {
                 langConfig.setDefaults(defaultConfig);
             }
         } catch (Exception e) {
-            // --- CORREZIONE 1: Usa il logger del plugin ---
+
             plugin.getLogger().log(Level.SEVERE, "Could not load default language file from JAR.", e);
         }
 
-        // MODIFICA: Carica il messaggio di fallback per evitare loop
+
         // Usa un placeholder %key% per evitare problemi con getString()
         this.missingTranslationMessage = langConfig.getString("errors.missing-translation", "&cMissing translation for: {key}");
     }
@@ -57,10 +57,10 @@ public class LanguageManager {
      * @return La stringa tradotta e colorata.
      */
     public String getString(String key) {
-        // MODIFICA: Usa il messaggio di fallback caricato
+
         String message = langConfig.getString(key, this.missingTranslationMessage.replace("{key}", key));
 
-        // --- CORREZIONE 2: Usa l'API Adventure (moderna) per i colori ---
+
         Component component = LegacyComponentSerializer.legacyAmpersand().deserialize(message);
         return LegacyComponentSerializer.legacySection().serialize(component);
     }
@@ -75,7 +75,7 @@ public class LanguageManager {
         String message = getString(key);
         for (int i = 0; i < replacements.length; i += 2) {
             if (i + 1 < replacements.length) {
-                // Assicurati che il valore di rimpiazzo non sia null
+
                 String value = replacements[i + 1] != null ?
                         replacements[i + 1] : "";
                 message = message.replace(replacements[i], value);

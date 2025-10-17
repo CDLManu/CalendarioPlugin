@@ -49,7 +49,7 @@ public class CalendarioExpansion extends PlaceholderExpansion {
      * Il valore viene letto dinamicamente dal file plugin.yml.
      * @return La stringa della versione.
      */
-    @SuppressWarnings("deprecation") // Sopprime l'avviso per getVersion(), usando il metodo stabile getDescription().
+    @SuppressWarnings("deprecation")
     @Override
     public @NotNull String getVersion() {
         return plugin.getDescription().getVersion();
@@ -78,7 +78,6 @@ public class CalendarioExpansion extends PlaceholderExpansion {
         TimeManager timeManager = plugin.getTimeManager();
         if (timeManager == null) {
             // Se il TimeManager non è ancora pronto, restituisce un messaggio di errore.
-            // MODIFICA: Usa il LanguageManager per il messaggio di errore
             return plugin.getLanguageManager().getString("errors.placeholder-api-fail");
         }
 

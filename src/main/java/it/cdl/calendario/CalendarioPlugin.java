@@ -80,30 +80,25 @@ public final class CalendarioPlugin extends JavaPlugin {
     public void reload() {
         getLogger().info(languageManager.getString("logs.plugin-reloading"));
 
-        // --- CORREZIONE DEFINITIVA ---
-        // 1. Salva i dati correnti (la data) nel file data.yml PRIMA di fare qualsiasi altra cosa.
-        //    Questo è il passaggio fondamentale per non perdere la data impostata.
+
+        //Salva i dati correnti (la data) nel file data.yml PRIMA di fare qualsiasi altra cosa.
         if (timeManager != null) {
             timeManager.saveData();
         }
-        // --- FINE CORREZIONE ---
-
-        // 2. Ferma tutti i sistemi attivi per prepararsi al riavvio.
+        // Ferma tutti i sistemi attivi per prepararsi al riavvio.
         shutdownPluginSystems();
 
-        // 3. Ricarica SOLO i file di configurazione (config.yml, events.yml, etc.).
+        // Ricarica SOLO i file di configurazione (config.yml, events.yml, etc.).
         reloadConfig();
 
-        // 4. Re-inizializza i componenti che dipendono dalla configurazione appena caricata.
+        // Re-inizializza i componenti che dipendono dalla configurazione appena caricata.
         this.debugMode = getConfig().getBoolean("debug-mode", false);
         this.languageManager = new LanguageManager(this);
 
-        // 5. Fa ripartire tutti i sistemi. TimeManager caricherà la data salvata da data.yml
-        //    o, se non è stato riavviato, manterrà quella che ha già in memoria.
+        // Fa ripartire tutti i sistemi. TimeManager caricherà la data salvata da data.yml o, se non è stato riavviato, manterrà quella che ha già in memoria.
         startupPluginSystems();
 
-        // 6. Forza l'aggiornamento dei sistemi per applicare subito le nuove impostazioni
-        //    lette dal config.yml (es. Nuova velocità del tempo).
+        //Forza l'aggiornamento dei sistemi per applicare subito le nuove impostazioni lette dal config.yml (es. Nuova velocità del tempo).
         if (mainTaskInstance != null) {
             mainTaskInstance.forceUpdate();
         }

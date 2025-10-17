@@ -173,7 +173,7 @@ public class TimeManager {
         Bukkit.broadcast(messageComponent);
     }
 
-    // MODIFICA: Commento obsoleto rimosso
+
 
     /**
      * Restituisce il giorno corrente.
@@ -206,7 +206,7 @@ public class TimeManager {
      * @return Il nome del mese o un messaggio di errore se invalido.
      */
     public String getNomeMese(int mese) {
-        // MODIFICA: Usa la chiave di lingua anche per il messaggio di fallback
+
         String fallback = plugin.getLanguageManager().getString("errors.invalid-month");
         return plugin.getLanguageManager().getString("months." + mese, fallback);
     }

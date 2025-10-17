@@ -155,9 +155,7 @@ public class SeasonalEffectsManager implements Listener {
         sendResourcePack(newSeason);
         LanguageManager lang = plugin.getLanguageManager();
 
-        // --- CORREZIONE: Convertito switch da espressione a istruzione ---
-        // La variabile 'seasonConfigKey' non era necessaria in questo contesto.
-        // Lo switch ora esegue solo le azioni necessarie per ogni stagione.
+
         switch (newSeason) {
             case INVERNO -> {
                 plugin.getLogger().info(lang.getString("seasonal-effects.winter-arrival"));
@@ -280,7 +278,7 @@ public class SeasonalEffectsManager implements Listener {
         World world = chunk.getWorld();
         Block highestBlock = world.getHighestBlockAt(x, z);
 
-        // MODIFICA: Controlla contro la lista caricata dal config
+
         if (!this.mildBiomes.contains(highestBlock.getBiome())) return;
 
         int baseChance = plugin.getConfig().getInt("visual-effects.inverno.freeze-chance", 30);
@@ -329,7 +327,7 @@ public class SeasonalEffectsManager implements Listener {
                     logNaturalChange("seasonal-effects.actions.snow-melted", highestBlock.getLocation());
                     int flowerChance = plugin.getConfig().getInt("visual-effects.primavera.flower-spawn-chance", 5);
 
-                    // MODIFICA: Sceglie un fiore casuale dalla lista caricata dal config
+                    //Sceglie un fiore casuale dalla lista caricata dal config
                     if (highestBlock.getRelative(BlockFace.DOWN).getType() == Material.GRASS_BLOCK &&
                             random.nextInt(100) < flowerChance &&
                             !spawnableFlowers.isEmpty()) {
