@@ -36,7 +36,7 @@ public class CalendarCommand implements CommandExecutor, TabCompleter {
             case "help" -> sendHelpMessage(sender);
             case "reload" -> handleReload(sender);
             case "set" -> handleSet(sender, args);
-            case "event" -> handleEvent(sender, args); // Passa sender e args
+            case "event" -> handleEvent(sender, args);
             default -> {
                 // Messaggio di comando non valido
                 sender.sendMessage(lang.getString("commands.invalid-subcommand"));
@@ -106,7 +106,6 @@ public class CalendarCommand implements CommandExecutor, TabCompleter {
                 tm.setAnno(value);
             }
             default -> {
-                // Messaggio di uso corretto
                 sender.sendMessage(lang.getString("commands.set-usage"));
                 return;
             }
@@ -138,7 +137,7 @@ public class CalendarCommand implements CommandExecutor, TabCompleter {
                     return;
                 }
                 String eventIdToStart = args[2].toLowerCase();
-                CustomEvent event = em.getEventById(eventIdToStart); // Metodo da aggiungere a EventManager
+                CustomEvent event = em.getEventById(eventIdToStart);
 
                 if (event == null) {
                     sender.sendMessage(lang.getString("commands.event-not-found", "{eventName}", eventIdToStart));
@@ -146,23 +145,25 @@ public class CalendarCommand implements CommandExecutor, TabCompleter {
                 }
 
                 // Termina l'evento corrente prima di avviarne uno nuovo
-                if (em.getActiveEvent() != null) { // Metodo da aggiungere
+                if (em.getActiveEvent() != null) {
                     em.endActiveEvent();
                 }
 
-                em.startEvent(event); // Metodo da rendere public
+                em.startEvent(event);
+                plugin.getMainTaskInstance().forceUpdate();
                 sender.sendMessage(lang.getString("commands.event-started", "{eventName}", event.displayName()));
             }
             case "end" -> {
-                if (em.getActiveEvent() == null) { // Metodo da aggiungere
+                if (em.getActiveEvent() == null) {
                     sender.sendMessage(lang.getString("commands.event-none-active"));
                     return;
                 }
                 em.endActiveEvent();
+                plugin.getMainTaskInstance().forceUpdate();
                 sender.sendMessage(lang.getString("commands.event-ended"));
             }
             case "status" -> {
-                CustomEvent activeEvent = em.getActiveEvent(); // Metodo da aggiungere
+                CustomEvent activeEvent = em.getActiveEvent();
                 if (activeEvent == null) {
                     sender.sendMessage(lang.getString("commands.event-status-none"));
                 } else {
@@ -179,7 +180,6 @@ public class CalendarCommand implements CommandExecutor, TabCompleter {
         if (!sender.isOp()) return null;
 
         if (args.length == 1) {
-            // Aggiunto "help"
             return List.of("set", "reload", "event", "help");
         }
 
@@ -188,7 +188,6 @@ public class CalendarCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 2 && args[0].equalsIgnoreCase("event")) {
-            // Aggiunti i sottocomandi di "event"
             return List.of("start", "end", "status");
         }
 

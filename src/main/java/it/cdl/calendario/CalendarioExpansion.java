@@ -35,10 +35,7 @@ public class CalendarioExpansion extends PlaceholderExpansion {
         return "calendario";
     }
 
-    /**
-     * Restituisce il nome dell'autore del plugin.
-     * @return Il nome dell'autore.
-     */
+
     @Override
     public @NotNull String getAuthor() {
         return "ManuX";

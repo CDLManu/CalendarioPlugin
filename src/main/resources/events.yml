@@ -19,7 +19,7 @@ events:
   # ========================== #
   #       ANNUAL EVENTS        #
   # ========================== #
-  capodanno:
+  new_year:
     display-name: "&b&lNew Year's Day"
     type: ANNUAL
     trigger-date: "01/01" # January 1st
@@ -30,7 +30,7 @@ events:
     end-commands:
       - 'tellraw @a {"text":"The New Year celebrations have ended!","color":"aqua"}'
 
-  pasqua:
+  easter:
     display-name: "&e&lEgg Hunt"
     type: ANNUAL
     trigger-date: "10/04" # April 10th (example date for Easter)
@@ -41,7 +41,7 @@ events:
     end-commands:
       - 'tellraw @a {"text":"The Egg Hunt is over! We hope you found many surprises!","color":"yellow"}'
 
-  ferragosto:
+  mid_august:
     display-name: "&6&lSummer Festival"
     type: ANNUAL
     trigger-date: "15/08" # August 15th
@@ -65,7 +65,7 @@ events:
       - 'tellraw @a {"text":"The Night of the Dead is over. The spirits have returned to their rest.","color":"light_purple"}'
       - 'gamerule doInsomnia true'
 
-  natale:
+  christmas:
     display-name: "&c&lChristmas Spirit"
     type: ANNUAL
     trigger-date: "25/12" # December 25th
@@ -123,7 +123,7 @@ events:
   # ====================== #
   #     FIXED DATE EVENTS    #
   # ====================== #
-  primo_giorno:
+  first_day:
     display-name: "&aThe Beginning of the Adventure"
     type: FIXED_DATE
     trigger-date: "01/01/0001" # Triggers only on the first day of the first year
@@ -132,7 +132,7 @@ events:
       - 'tellraw @a [{"text":"Welcome!","color":"gold","bold":true},{"text":" May your adventure in these lands begin!","color":"yellow"}]'
     end-commands: []
 
-  anniversario:
+  anniversary:
     display-name: "&dFirst Server Anniversary"
     type: FIXED_DATE
     trigger-date: "01/01/0002" # Triggers only on the first day of the second year

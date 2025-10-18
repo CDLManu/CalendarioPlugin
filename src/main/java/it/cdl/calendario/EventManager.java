@@ -170,8 +170,8 @@ public class EventManager {
         this.daysRemaining = event.durationDays();
 
         String displayName = event.displayName().replace('&', '§');
-        plugin.getLogger().info(plugin.getLanguageManager().getString("events.event-started-log", "{eventName}", displayName));
-
+        String logMessage = plugin.getLanguageManager().getString("events.event-started-log", "{eventName}", displayName);
+        Bukkit.getConsoleSender().sendMessage("[CalendarioPlugin] " + logMessage);
         executeCommands(event.startCommands());
     }
 

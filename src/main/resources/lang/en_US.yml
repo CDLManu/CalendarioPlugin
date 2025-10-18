@@ -56,7 +56,6 @@ months:
   11: "November"
   12: "December"
 
-# --- CORREZIONE: Chiavi allineate all'enum Java ---
 seasons:
   INVERNO: "&bWinter"
   PRIMAVERA: "&aSpring"
@@ -86,9 +85,7 @@ seasonal-effects:
     snow-melted: "Snow melted"
     ice-melted: "Ice melted"
 
-  # Aggiungi questa nuova sezione (ad esempio dopo 'seasonal-effects')
 logs:
-  # Messaggi mostrati solo nella console del server
   plugin-reloading: "Reloading plugin..."
   plugin-reloaded: "Plugin reloaded successfully."
   papi-found: "PlaceholderAPI found! Placeholders have been enabled."

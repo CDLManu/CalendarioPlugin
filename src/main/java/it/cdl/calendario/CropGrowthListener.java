@@ -98,7 +98,6 @@ public final class CropGrowthListener implements Listener {
             case ESTATE -> coltureEstive.contains(cropType);
             case AUTUNNO -> coltureAutunnali.contains(cropType);
             case INVERNO -> coltureInvernali.contains(cropType);
-            // default non è necessario se tutti i casi Enum sono coperti
         };
     }
 }

@@ -7,11 +7,9 @@ import org.bukkit.scheduler.BukkitRunnable;
  * Rappresenta il "cuore" pulsante del plugin Calendario.
  * Questo task, eseguito a intervalli regolari, è responsabile della gestione
  * del ciclo temporale personalizzato del mondo di gioco. Le sue responsabilità includono:
- * <ul>
- * <li>Avanzamento del tempo con velocità variabile in base alla stagione e alla configurazione.</li>
- * <li>Rilevamento del passaggio dei giorni per aggiornare il calendario interno.</li>
- * <li>Innescare gli aggiornamenti per i manager dipendenti (es. {@link BossBarManager}, {@link SeasonalEffectsManager}).</li>
- * </ul>
+ * Avanzamento del tempo con velocità variabile in base alla stagione e alla configurazione.
+ * Rilevamento del passaggio dei giorni per aggiornare il calendario interno.
+ * Innescare gli aggiornamenti per i manager dipendenti
  */
 public class CalendarTask extends BukkitRunnable {
 

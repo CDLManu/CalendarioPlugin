@@ -31,21 +31,21 @@ public final class CalendarioPlugin extends JavaPlugin {
      */
     @Override
     public void onEnable() {
-        // 1. Creazione e salvataggio dei file di default se non esistono.
+        //Creazione e salvataggio dei file di default se non esistono.
         setupDefaultFiles();
 
-        // 2. Caricamento della configurazione e inizializzazione dei manager.
-        // Salva le nuove sezioni di config se non esistono
+        //Caricamento della configurazione e inizializzazione dei manager.
+        //Salva le nuove sezioni di config se non esistono
         this.saveDefaultConfig();
         this.reloadConfig();
         this.debugMode = getConfig().getBoolean("debug-mode", false);
         this.languageManager = new LanguageManager(this);
 
-        // 3. Avvio dei sistemi principali del plugin.
+        //Avvio dei sistemi principali del plugin.
         startupPluginSystems();
         registerCommandsAndListeners();
 
-        // 4. Integrazione con API esterne (PlaceholderAPI).
+        //Integrazione con API esterne (PlaceholderAPI).
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new CalendarioExpansion(this).register();
             getLogger().info(languageManager.getString("logs.papi-found"));

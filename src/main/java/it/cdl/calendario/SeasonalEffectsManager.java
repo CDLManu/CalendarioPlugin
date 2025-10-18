@@ -14,13 +14,16 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
 
+import java.util.HashSet;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.function.Consumer;
+
 
 /**
  * Gestisce l'applicazione di effetti visivi e ambientali legati alle stagioni.
@@ -81,12 +84,34 @@ public class SeasonalEffectsManager implements Listener {
      */
     private Set<Biome> loadBiomesFromConfig() {
         List<String> biomeNames = plugin.getConfig().getStringList("visual-effects.mild-biomes");
-        Set<Biome> biomes = EnumSet.noneOf(Biome.class);
+
+        Set<Biome> biomes = new HashSet<>();
 
         for (String name : biomeNames) {
+
+            NamespacedKey key;
             try {
-                biomes.add(Biome.valueOf(name.toUpperCase()));
-            } catch (IllegalArgumentException e) {
+                // Supporta sia "PLAINS" (che diventa "minecraft:plains")
+                if (name.contains(":")) {
+                    String[] parts = name.split(":", 2);
+                    key = new NamespacedKey(parts[0].toLowerCase(), parts[1].toLowerCase());
+                } else {
+                    key = NamespacedKey.minecraft(name.toLowerCase());
+                }
+            } catch (Exception e) {
+                // Formato chiave non valido (es. "Nome:non valido:con parti")
+                plugin.getLogger().warning(
+                        plugin.getLanguageManager().getString("logs.invalid-config-biome", "{biome}", name)
+                );
+                continue;
+            }
+
+            // Cerca il bioma nel registro di Bukkit
+            Biome biome = Registry.BIOME.get(key);
+
+            if (biome != null) {
+                biomes.add(biome);
+            } else {
                 plugin.getLogger().warning(
                         plugin.getLanguageManager().getString("logs.invalid-config-biome", "{biome}", name)
                 );
@@ -94,6 +119,7 @@ public class SeasonalEffectsManager implements Listener {
         }
         return biomes;
     }
+
 
     /**
      * Metodo helper per caricare una lista di Materiali dal config.
@@ -104,7 +130,8 @@ public class SeasonalEffectsManager implements Listener {
 
         for (String name : materialNames) {
             Material mat = Material.matchMaterial(name.toUpperCase());
-            if (mat != null && mat.isItem()) { // Assicura che sia un blocco/fiore piazzabile
+            // Assicura che sia un blocco/fiore piazzabile
+            if (mat != null && mat.isItem()) {
                 materials.add(mat);
             } else {
                 plugin.getLogger().warning(
@@ -155,7 +182,6 @@ public class SeasonalEffectsManager implements Listener {
         sendResourcePack(newSeason);
         LanguageManager lang = plugin.getLanguageManager();
 
-
         switch (newSeason) {
             case INVERNO -> {
                 plugin.getLogger().info(lang.getString("seasonal-effects.winter-arrival"));
@@ -169,7 +195,6 @@ public class SeasonalEffectsManager implements Listener {
                 plugin.getLogger().info(lang.getString("seasonal-effects.autumn-arrival"));
                 startAutumnEffects();
             }
-            // Il caso ESTATE e default non richiedono azioni specifiche qui.
         }
     }
 
@@ -262,7 +287,7 @@ public class SeasonalEffectsManager implements Listener {
      * Avvia il task per gli effetti autunnali (attualmente nessuno).
      */
     private void startAutumnEffects() {
-        // Attualmente non sono previste azioni periodiche per l'autunno.
+        //Non sono previste azioni periodiche per l'autunno.
     }
 
     /**
@@ -278,7 +303,7 @@ public class SeasonalEffectsManager implements Listener {
         World world = chunk.getWorld();
         Block highestBlock = world.getHighestBlockAt(x, z);
 
-
+        // Controlla la lista caricata dal config
         if (!this.mildBiomes.contains(highestBlock.getBiome())) return;
 
         int baseChance = plugin.getConfig().getInt("visual-effects.inverno.freeze-chance", 30);
@@ -327,7 +352,7 @@ public class SeasonalEffectsManager implements Listener {
                     logNaturalChange("seasonal-effects.actions.snow-melted", highestBlock.getLocation());
                     int flowerChance = plugin.getConfig().getInt("visual-effects.primavera.flower-spawn-chance", 5);
 
-                    //Sceglie un fiore casuale dalla lista caricata dal config
+                    // Sceglie un fiore casuale dalla lista caricata dal config
                     if (highestBlock.getRelative(BlockFace.DOWN).getType() == Material.GRASS_BLOCK &&
                             random.nextInt(100) < flowerChance &&
                             !spawnableFlowers.isEmpty()) {
@@ -372,7 +397,6 @@ public class SeasonalEffectsManager implements Listener {
                     "{worldName}", location.getWorld().getName(),
                     "{x}", String.format("%.0f", location.getX()),
                     "{y}", String.format("%.0f", location.getY()),
-
                     "{z}", String.format("%.0f", location.getZ())
             ));
         }

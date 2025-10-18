@@ -12,12 +12,10 @@ import java.util.logging.Level;
 /**
  * Gestisce tutti gli aspetti legati al tempo e al calendario del plugin.
  * Le sue responsabilità includono:
- * <ul>
- * <li>Mantenere e modificare la data corrente (giorno, mese, anno).</li>
- * <li>Salvare e caricare la data da un file dedicato (data.yml) per separarla dalla configurazione.</li>
- * <li>Determinare la stagione corrente in base al mese.</li>
- * <li>Fornire metodi di utilità per accedere alle informazioni temporali in modo formattato.</li>
- * </ul>
+ * Mantenere e modificare la data corrente (giorno, mese, anno)
+ * Salvare e caricare la data da un file dedicato (data.yml) per separarla dalla configurazione
+ * Determinare la stagione corrente in base al mese
+ * Fornire metodi di utilità per accedere alle informazioni temporali in modo formattato
  */
 public class TimeManager {
 
@@ -95,7 +93,7 @@ public class TimeManager {
                 }
             }
             default -> 30;
-            // Fallback di sicurezza, non dovrebbe mai essere raggiunto
+            // Fallback di sicurezza
         };
     }
     /**

@@ -53,7 +53,6 @@ resource-packs:
 # --- SLEEP MECHANICS ---
 # Percentage of players (from 0 to 100) required to sleep to skip the night.
 # Setting it to 100 means everyone must sleep. Setting it to 50 means only half need to.
-# If this option is not present, the default value will be 100.
 sleep-mechanics:
   players-sleeping-percentage: 100
 
@@ -76,8 +75,8 @@ seasonal-farming:
   # Probability (from 0.0 to 1.0) that an out-of-season plant can grow.
   # 0.25 = 25% chance. 0.0 = growth is completely blocked.
   out-of-season-growth-chance: 0.25
-  # Definisce quali piante possono crescere in quali stagioni.
-  # Le piante non in lista useranno la "out-of-season-growth-chance". crops:
+  # Defines which plants can grow in which seasons.
+  # Plants not on the list will use the ‘out-of-season-growth-chance’. crops:
   primavera:
     - "WHEAT"
     - "CARROTS"
@@ -92,7 +91,7 @@ seasonal-farming:
       - "WHEAT"
       - "CARROTS"
       - "POTATOES"
-  # L'inverno è vuoto, quindi (quasi) nulla cresce.
+  # Winter is barren, so (almost) nothing grows.
   inverno: [ ]
 
 
@@ -103,7 +102,8 @@ bossbar:
   # Set to 'false' to hide the colored progress bar and show only the text.
   show-progress-bar: false
   # Title format. Placeholders: {data}, {stagione}, {meteo}, {ora}
-  format: "&a{data} &8| {stagione} &8| {meteo} &8| &e{ora}"
+  format: "&a{data} &8| {stagione} &8| {meteo} &8| &e{ora} &8| &d{evento}"
+  no-event-text: ""
   # Bar color: BLUE, GREEN, PINK, PURPLE, RED, WHITE, YELLOW
   bar-color: "BLUE"
   # Bar style: SOLID, SEGMENTED_6, SEGMENTED_10, SEGMENTED_12, SEGMENTED_20

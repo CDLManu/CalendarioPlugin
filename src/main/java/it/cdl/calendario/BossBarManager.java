@@ -50,7 +50,7 @@ public class BossBarManager {
     private int lastCheckedYear = -1;
     private boolean wasThundering = false;
     private boolean wasRaining = false;
-
+    private String cachedActiveEventId = "";
     /**
      * Costruttore del manager della Boss Bar.
      * Inizializza le impostazioni leggendole dal file di configurazione del plugin.
@@ -96,18 +96,35 @@ public class BossBarManager {
             needsPrefixUpdate = true;
         }
 
+        // Controlla se l'evento è cambiato dall'ultimo tick
+        CustomEvent activeEvent = plugin.getEventManager().getActiveEvent();
+        String activeEventId = (activeEvent != null) ? activeEvent.id() : "";
+
+        if (!activeEventId.equals(this.cachedActiveEventId)) {
+            // Aggiorna la cache
+            this.cachedActiveEventId = activeEventId;
+            // Forza l'aggiornamento del prefisso
+            needsPrefixUpdate = true;
+        }
+
         if (needsPrefixUpdate) {
             LanguageManager lang = plugin.getLanguageManager();
-
             String datePart = "§a" + currentDay + " " + tm.getNomeMese(currentMonth) + " " + currentYear;
             String seasonPart = tm.getStagioneCorrente();
             String weatherPart = isThundering ? lang.getString("bossbar.weather-storm") : (isRaining ? lang.getString("bossbar.weather-rain") : lang.getString("bossbar.weather-clear"));
+            String eventPart;
+            if (activeEvent != null) {
+                eventPart = activeEvent.displayName().replace('&', '§');
+            } else {
+                eventPart = plugin.getConfig().getString("bossbar.no-event-text", "");
+            }
 
             String format = plugin.getConfig().getString("bossbar.format", "&a{data} &8| {stagione} &8| {meteo} &8| &e{ora}");
             this.cachedTitlePrefix = format
                     .replace("{data}", datePart)
                     .replace("{stagione}", seasonPart)
                     .replace("{meteo}", weatherPart)
+                    .replace("{evento}", eventPart)
                     .replace('&', '§');
         }
 

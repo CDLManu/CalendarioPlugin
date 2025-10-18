@@ -47,8 +47,7 @@ public final class SleepListener implements Listener {
             return;
         }
 
-        // Esegue il controllo con un ritardo di 2 tick per garantire che lo stato di sonno
-        // di tutti i giocatori sia stato aggiornato correttamente dal server.
+        // Esegue il controllo con un ritardo di 2 tick per garantire che lo stato di sonno di tutti i giocatori sia stato aggiornato correttamente dal server.
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             World world = event.getPlayer().getWorld();
 
